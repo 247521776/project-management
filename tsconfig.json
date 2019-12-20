@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "outDir": "dist",
+        "declaration": true,
+        "target": "ES6"
+    },
+    "include": [
+        "*.ts",
+        "icon.png",
+        "index.html"
+    ],
+    "exclude": [
+        "node_modules",
+        "test/*"
+    ]
+}

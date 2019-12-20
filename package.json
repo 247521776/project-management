@@ -1,0 +1,29 @@
+{
+  "name": "project-management",
+  "version": "1.0.0",
+  "description": "用于管理项目",
+  "main": "app.ts",
+  "scripts": {
+    "build": "rimraf -rf dist && tsc",
+    "cp": "cp -r images dist && cp index.html dist",
+    "start": "npm run build && npm run cp && electron dist/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/247521776/project-management.git"
+  },
+  "author": "yanglei",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/247521776/project-management/issues"
+  },
+  "homepage": "https://github.com/247521776/project-management#readme",
+  "dependencies": {
+    "@types/node": "^12.12.21",
+    "electron": "^7.1.6"
+  },
+  "devDependencies": {
+    "electron-rebuild": "^1.8.8",
+    "rimraf": "^3.0.0"
+  }
+}
