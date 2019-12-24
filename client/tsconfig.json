@@ -4,17 +4,16 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "sourceMap": true,
-        "outDir": "dist",
+        "outDir": "../dist",
         "declaration": true,
-        "target": "ES6"
+        "target": "ES6",
+        "resolveJsonModule": true
     },
     "include": [
         "*.ts",
-        "icon.png",
-        "index.html"
+        "data.json"
     ],
     "exclude": [
-        "node_modules",
-        "test/*"
+        "node_modules"
     ]
 }

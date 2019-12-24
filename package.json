@@ -4,9 +4,13 @@
   "description": "用于管理项目",
   "main": "app.ts",
   "scripts": {
-    "build": "rimraf -rf dist && tsc",
-    "cp": "cp -r images dist && cp index.html dist",
-    "start": "npm run build && npm run cp && electron dist/app.js"
+    "build": "npm run build:client && npm run build:web",
+    "cp": "cp -r dist/ build",
+    "start": "npm run build && npm run cp && cd build && electron app.js",
+    "build:client": "rimraf -rf dist && cd client && tsc",
+    "build:web": "rimraf -rf build && react-app-rewired build",
+    "pack": "electron-builder --linux",
+    "dist": "electron-builder"
   },
   "repository": {
     "type": "git",
@@ -20,10 +24,58 @@
   "homepage": "https://github.com/247521776/project-management#readme",
   "dependencies": {
     "@types/node": "^12.12.21",
-    "electron": "^7.1.6"
+    "antd": "^3.26.4",
+    "electron": "^7.1.6",
+    "jquery": "^3.2.1",
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1",
+    "redux": "^3.7.2",
+    "typescript": "^3.7.4"
   },
   "devDependencies": {
+    "electron-builder": "^21.2.0",
     "electron-rebuild": "^1.8.8",
+    "react-app-rewired": "^2.1.5",
+    "react-scripts": "^3.3.0",
     "rimraf": "^3.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "build": {
+    "productName": "project-management",
+    "extends": null,
+    "files": [
+      "build/**/*"
+    ],
+    "mac": {
+      "icon": "images/icon.png"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "images/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "images/icon.png"
+    },
+    "extraMetadata": {
+      "main": "build/app.js"
+    },
+    "directories": {
+      "buildResources": "assets"
+    }
   }
 }
