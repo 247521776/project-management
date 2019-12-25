@@ -4,6 +4,13 @@ import { Shortcut } from "./shortcut";
 import { Event } from "./event";
 import * as data from "./data.json";
 import * as path from "path";
+import * as fs from "fs";
+import { fileExistAndNotExistCreate } from "./utils";
+
+fileExistAndNotExistCreate("./data.json", JSON.stringify({
+    dir: "",
+    projects: []
+}, null, 4));
 
 let mainWindow: BrowserWindow | null;
 
@@ -34,6 +41,7 @@ function createWindow() {
     mainWindow.on("closed", function() {
         mainWindow = null;
         app.quit();
+        fs.writeFileSync("./data.json", JSON.stringify(data, null, 4));
     });
     const menuBuilder = new MenuBuilder(mainWindow);
     menuBuilder.buildMenu();

@@ -48,6 +48,8 @@ class HomePage extends Component {
         this.setState({
             data: this.state.data
         });
+
+        electron.ipcRenderer.send("deleteProject", index);
     }
 
     render() {
