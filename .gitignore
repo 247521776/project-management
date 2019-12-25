@@ -106,5 +106,3 @@ dist
 build
 
 package-lock.json
-
-client/data.json

@@ -2,15 +2,9 @@ import { app, BrowserWindow, globalShortcut } from "electron";
 import { MenuBuilder } from "./menu";
 import { Shortcut } from "./shortcut";
 import { Event } from "./event";
-import * as data from "./data.json";
 import * as path from "path";
 import * as fs from "fs";
-import { fileExistAndNotExistCreate } from "./utils";
-
-fileExistAndNotExistCreate("./data.json", JSON.stringify({
-    dir: "",
-    projects: []
-}, null, 4));
+import * as data from "./data.json";
 
 let mainWindow: BrowserWindow | null;
 
