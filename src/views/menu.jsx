@@ -4,8 +4,6 @@ import $ from "jquery";
 import "antd/dist/antd.css";
 import { LoadingPage } from "./loading";
 
-const electron = window.require('electron');
-
 const style = {
     "margin-left": "10px"
 };
@@ -14,16 +12,7 @@ export class MenuPage extends Component {
     constructor() {
         super(...arguments);
 
-        electron.ipcRenderer.once('loaded', (event) => {
-            message.success('添加成功');
-
-            this.setState({
-                visible: false,
-                newVisible: false,
-                loading: false,
-            });
-
-        });
+        this.props.onRef(this);
     }
     state = { 
         visible: false,
@@ -36,6 +25,8 @@ export class MenuPage extends Component {
             visible: true
         });
     };
+
+
 
     hideModal = () => {
         this.setState({

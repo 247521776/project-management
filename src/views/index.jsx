@@ -62,6 +62,10 @@ class HomePage extends Component {
         });
     }
 
+    onRef(ref) {
+        this.menuPage = ref;
+    }
+
     onCreate(data) {
         let { projectDir, type, projectPath, gitPath } = data;
         const projects = this.state.data.projects;
@@ -83,6 +87,17 @@ class HomePage extends Component {
         }
 
         electron.ipcRenderer.send("addProject", data);
+
+        electron.ipcRenderer.on('loaded', () => {
+            message.success('添加成功');
+
+            this.menuPage.setState({
+                visible: false,
+                newVisible: false,
+                loading: false,
+            });
+
+        });
     }
 
     render() {
@@ -91,7 +106,7 @@ class HomePage extends Component {
         if (projects.length > 0) {
             return (
                 <div>
-                    <MenuPage onCreate={this.onCreate} />
+                    <MenuPage onRef={this.onRef} onCreate={this.onCreate} />
                     {
                         projects.map((project, index) => {
                             return (
@@ -129,7 +144,7 @@ class HomePage extends Component {
         }
         else {
             return (
-                <EmptyPage onCreate={this.onCreate} />
+                <EmptyPage onRef={this.onRef} onCreate={this.onCreate} />
             );
         }
     }
