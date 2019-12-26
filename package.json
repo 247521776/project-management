@@ -4,13 +4,14 @@
   "description": "用于管理项目",
   "main": "app.ts",
   "scripts": {
-    "build": "npm run build:client && npm run build:web",
+    "build": "npm run build:client && npm run build:web && npm run cp",
     "cp": "cp -r dist/ build",
-    "start": "npm run build && npm run cp && cd build && electron app.js",
+    "start": "npm run build && cd build && electron app.js",
     "build:client": "rimraf -rf dist && cd client && tsc",
     "build:web": "rimraf -rf build && react-app-rewired build",
-    "pack": "electron-builder --linux",
-    "dist": "electron-builder"
+    "pack": "npm run build && electron-builder build --mac",
+    "dist": "electron-builder",
+    "postinstall": "electron-builder install-app-deps && opencollective-postinstall"
   },
   "repository": {
     "type": "git",
@@ -23,21 +24,22 @@
   },
   "homepage": "https://github.com/247521776/project-management#readme",
   "dependencies": {
-    "@types/node": "^12.12.21",
     "antd": "^3.26.4",
-    "electron": "^7.1.6",
+    "electron-store": "^5.1.0",
     "jquery": "^3.2.1",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
-    "redux": "^3.7.2",
-    "typescript": "^3.7.4"
+    "redux": "^3.7.2"
   },
   "devDependencies": {
+    "@types/node": "^12.12.21",
+    "electron": "^7.1.6",
     "electron-builder": "^21.2.0",
-    "electron-rebuild": "^1.8.8",
+    "opencollective-postinstall": "^2.0.2",
     "react-app-rewired": "^2.1.5",
+    "rimraf": "^3.0.0",
     "react-scripts": "^3.3.0",
-    "rimraf": "^3.0.0"
+    "typescript": "^3.7.4"
   },
   "browserslist": {
     "production": [
@@ -52,30 +54,39 @@
     ]
   },
   "build": {
-    "productName": "project-management",
+    "productName": "项目管理",
+    "appId": "org.develar.projectManagement",
     "extends": null,
     "files": [
-      "build/**/*"
+      "build/**/*",
+      "node_modules/",
+      "package.json"
     ],
     "mac": {
-      "icon": "images/icon.png"
-    },
-    "win": {
-      "target": "nsis",
-      "icon": "images/icon.png"
-    },
-    "linux": {
+      "icon": "images/icon.png",
       "target": [
-        "AppImage",
-        "deb"
-      ],
-      "icon": "images/icon.png"
+        "dmg"
+      ]
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     },
     "extraMetadata": {
       "main": "build/app.js"
     },
     "directories": {
-      "buildResources": "assets"
+      "output": "release"
     }
   }
 }

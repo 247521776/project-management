@@ -3,16 +3,11 @@ import { MenuBuilder } from "./menu";
 import { Shortcut } from "./shortcut";
 import { Event } from "./event";
 import * as path from "path";
-import * as fs from "fs";
-import * as data from "./data.json";
+import { getProjectList, setProjectList } from "./utils";
+
+const loadURL = `file://${path.resolve(__dirname, "../")}/build/index.html`;
 
 let mainWindow: BrowserWindow | null;
-
-interface IProject {
-    name: string;
-    description: string;
-    version: string;
-}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -28,33 +23,24 @@ function createWindow() {
         titleBarStyle: "hidden"
     });
 
-    mainWindow.loadURL(
-        `file://${path.resolve(__dirname, "../")}/build/index.html`
-    );
+    mainWindow.loadURL(loadURL);
+
+    const data = getProjectList();
 
     mainWindow.on("closed", function() {
         mainWindow = null;
         app.quit();
-        fs.writeFileSync("./data.json", JSON.stringify(data, null, 4));
+        setProjectList(data.projects);
     });
     const menuBuilder = new MenuBuilder(mainWindow);
     menuBuilder.buildMenu();
 
-    const event = new Event(data);
+
+    const event = new Event(mainWindow, data);
     event.build();
 
     const shortcut = new Shortcut(mainWindow);
     shortcut.register();
-
-    const projects = data.projects;
-    const dir = data.dir;
-
-    for (const project of projects) {
-        const packagePath = path.resolve(dir, project.name, "package.json");
-        const packageJson = require(packagePath);
-        (project as IProject).description = packageJson.description;
-        (project as IProject).version = packageJson.version;
-    }
 
     mainWindow.webContents.on("did-finish-load", function() {
         mainWindow.webContents.send("data", data);

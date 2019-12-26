@@ -106,3 +106,5 @@ dist
 build
 
 package-lock.json
+
+release
