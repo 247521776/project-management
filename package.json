@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run build:client && npm run build:web && npm run cp",
     "cp": "cp -r dist/ build",
-    "start": "npm run build && cd build && electron app.js",
+    "start": "npm run build && cd build && cross-env NODE_ENV=dev electron app.js",
     "build:client": "rimraf -rf dist && cd client && tsc",
     "build:web": "rimraf -rf build && react-app-rewired build",
     "pack": "npm run build && electron-builder build --mac",
@@ -33,12 +33,13 @@
   },
   "devDependencies": {
     "@types/node": "^12.12.21",
+    "cross-env": "^6.0.3",
     "electron": "^7.1.6",
     "electron-builder": "^21.2.0",
     "opencollective-postinstall": "^2.0.2",
     "react-app-rewired": "^2.1.5",
-    "rimraf": "^3.0.0",
     "react-scripts": "^3.3.0",
+    "rimraf": "^3.0.0",
     "typescript": "^3.7.4"
   },
   "browserslist": {

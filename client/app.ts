@@ -5,6 +5,7 @@ import { Event } from "./event";
 import * as path from "path";
 import { getProjectList, setProjectList } from "./utils";
 
+const env = process.env.NODE_ENV;
 const loadURL = `file://${path.resolve(__dirname, "../")}/build/index.html`;
 
 let mainWindow: BrowserWindow | null;
@@ -32,8 +33,10 @@ function createWindow() {
         app.quit();
         setProjectList(data.projects);
     });
-    const menuBuilder = new MenuBuilder(mainWindow);
-    menuBuilder.buildMenu();
+    if (env === "dev") {
+        const menuBuilder = new MenuBuilder(mainWindow);
+        menuBuilder.buildMenu();
+    }
 
 
     const event = new Event(mainWindow, data);
