@@ -54,8 +54,7 @@ export class Event {
 
         setProjectList(this.data.projects);
 
-        this.browserWindow.webContents.send("data", getProjectList());
-        this.browserWindow.webContents.send("loaded", "");
+        this.browserWindow.webContents.send("loaded", getProjectList());
     }
 
     newAddProject(projectPath, gitPath) {
@@ -75,8 +74,7 @@ export class Event {
         );
 
         result.on("close", () => {
-            this.browserWindow.webContents.send("data", getProjectList());
-            this.browserWindow.webContents.send("loaded", "");
+            this.browserWindow.webContents.send("loaded", getProjectList());
         });
 
     }

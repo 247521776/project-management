@@ -25,6 +25,7 @@ class HomePage extends Component {
 
         this.state = this.getOwnState();
         this.onCreate = this.onCreate.bind(this);
+        this.onRef = this.onRef.bind(this);
         this.state.data = {
             projects: []
         };
@@ -33,6 +34,21 @@ class HomePage extends Component {
             this.setState({
                 data: message
             });
+        });
+
+        electron.ipcRenderer.on('loaded', (event, result) => {
+            message.success('添加成功');
+
+            this.setState({
+                data: result
+            });
+
+            this.menuPage.setState({
+                visible: false,
+                newVisible: false,
+                loading: false,
+            });
+
         });
     }
 
@@ -87,17 +103,6 @@ class HomePage extends Component {
         }
 
         electron.ipcRenderer.send("addProject", data);
-
-        electron.ipcRenderer.on('loaded', () => {
-            message.success('添加成功');
-
-            this.menuPage.setState({
-                visible: false,
-                newVisible: false,
-                loading: false,
-            });
-
-        });
     }
 
     render() {
