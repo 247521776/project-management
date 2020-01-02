@@ -4,6 +4,13 @@ export class MenuBuilder {
     browserWindow: BrowserWindow;
     constructor(browserWindow: BrowserWindow) {
         this.browserWindow = browserWindow;
+
+        const applicationMenu = Menu.getApplicationMenu();
+        const newApplicationMenu = new Menu();
+        newApplicationMenu.append(applicationMenu.items[0]);
+        newApplicationMenu.append(applicationMenu.items[1]);
+
+        Menu.setApplicationMenu(newApplicationMenu);
     }
 
     buildMenu() {

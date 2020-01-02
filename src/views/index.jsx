@@ -1,4 +1,4 @@
-import { Card, Icon, Descriptions, Modal, message, Popover } from 'antd';
+import { Card, Icon, Descriptions, Modal, message, Tooltip } from 'antd';
 import React, { Component, PropTypes } from "react";
 import "antd/dist/antd.css";
 import { MenuPage } from "../component/menu";
@@ -73,7 +73,7 @@ class HomePage extends Component {
 
                 electron.ipcRenderer.send("deleteProject", index);
 
-                message.success('删除成功');
+                message.success('删除成功', 1.5);
             }
         });
     }
@@ -118,7 +118,7 @@ class HomePage extends Component {
                                 <Card
                                     style={cardStyle}
                                     actions={[
-                                        <Popover placement="topLeft" content="使用vscode打开项目">
+                                        <Tooltip title="使用vscode打开项目" arrowPointAtCenter>
                                             <Icon
                                                 style={iconStyle}
                                                 index={index}
@@ -127,8 +127,8 @@ class HomePage extends Component {
                                                 theme="twoTone"
                                                 twoToneColor="#4abfaf"
                                             />
-                                        </Popover>,
-                                        <Popover placement="topRight" content="删除项目(本地将无此项目)">
+                                        </Tooltip>,
+                                        <Tooltip title="从本地删除该项目" arrowPointAtCenter>
                                             <Icon
                                                 style={iconStyle}
                                                 index={index}
@@ -137,7 +137,7 @@ class HomePage extends Component {
                                                 theme="twoTone"
                                                 twoToneColor="#ff4c4c"
                                             />
-                                        </Popover>
+                                        </Tooltip>
                                     ]}
                                 >
                                     <Descriptions title={project.name}>
