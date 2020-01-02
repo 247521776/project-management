@@ -5,7 +5,7 @@ import "antd/dist/antd.css";
 import { LoadingPage } from "./loading";
 
 const style = {
-    "margin-left": "10px"
+    "margin-left": "7px"
 };
 
 const formItemLayout = {
@@ -27,7 +27,14 @@ const AddProjectForm = Form.create()(
             >
                 <Form>
                     <Form.Item label="项目路径" {...formItemLayout}>
-                        {getFieldDecorator('projectDir', {})(
+                        {getFieldDecorator('projectDir', {
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请输入项目路径',
+                                },
+                            ]
+                        })(
                             <Input allowClear={true} id="projectDir" placeholder="请输入项目路径"/>
                         )}
                     </Form.Item>
@@ -51,12 +58,26 @@ const NewAddProjectForm = Form.create()(
             >
                 <Form>
                     <Form.Item label="目录" {...formItemLayout}>
-                        {getFieldDecorator('projectPath', {})(
+                        {getFieldDecorator('projectPath', {
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请输入目录',
+                                },
+                            ]
+                        })(
                             <Input allowClear={true} id="projectPath" placeholder="请输入目录"/>
                         )}
                     </Form.Item>
                     <Form.Item label="git地址" {...formItemLayout}>
-                        {getFieldDecorator('gitPath', {})(
+                        {getFieldDecorator('gitPath', {
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请输入git地址',
+                                },
+                            ]
+                        })(
                             <Input allowClear={true} id="gitPath" placeholder="请输入git地址"/>
                         )}
                     </Form.Item>
@@ -82,25 +103,29 @@ export class MenuPage extends Component {
 
     showModal = () => {
         this.setState({
-            visible: true
+            visible: true,
+            menuClick: false,
         });
     };
 
     hideModal = () => {
         this.setState({
-            visible: false
+            visible: false,
+            menuClick: false,
         });
     };
 
     newShowModal = () => {
         this.setState({
-            newVisible: true
+            newVisible: true,
+            menuClick: false,
         });
     };
 
     newHideModal = () => {
         this.setState({
-            newVisible: false
+            newVisible: false,
+            menuClick: false,
         });
     };
 
@@ -117,6 +142,7 @@ export class MenuPage extends Component {
             this.setState({
                 visible: false,
                 loading: false,
+                menuClick: false,
             });
         }
         else {
@@ -125,6 +151,7 @@ export class MenuPage extends Component {
             this.setState({
                 visible: false,
                 loading: true,
+                menuClick: false,
             });
         }
     }
@@ -139,6 +166,7 @@ export class MenuPage extends Component {
             this.setState({
                 visible: false,
                 loading: false,
+                menuClick: false,
             });
         }
         else {
@@ -147,24 +175,38 @@ export class MenuPage extends Component {
             this.setState({
                 newVisible: false,
                 loading: true,
+                menuClick: false,
             });
         }
+    }
+
+    onDropdownVisibleChange(visible) {
+        if (visible) {
+            this.setState({
+                menuClick: true
+            });
+        }
+        else {
+            this.setState({
+                menuClick: false
+            });
+        }        
     }
 
     render() {
         const menu = (
             <Menu>
-                <Menu.Item key="1" onClick={this.newShowModal.bind(this)}>添加新项目</Menu.Item>
-                <Menu.Item key="0" onClick={this.showModal.bind(this)}>添加已有项目</Menu.Item>
+                <Menu.Item key="0" onClick={this.newShowModal.bind(this)}>添加新项目</Menu.Item>
+                <Menu.Item key="1" onClick={this.showModal.bind(this)}>添加已有项目</Menu.Item>
             </Menu>
         );
 
         return (
             <div>
                 {this.state.loading ? <LoadingPage /> : ""}
-                <Dropdown overlay={menu} trigger={["click"]}>
-                    <a className="ant-dropdown-link" href="#">
-                        <Icon style={style} type="align-left" />
+                <Dropdown overlay={menu} onVisibleChange={this.onDropdownVisibleChange.bind(this)} trigger={["click"]}>
+                    <a style={style} className="ant-dropdown-link" href="#">
+                    {this.state.menuClick ? <Icon type="minus-square" theme="twoTone" /> : <Icon type="plus-square" theme="twoTone" />}
                     </a>
                 </Dropdown>
                 <AddProjectForm

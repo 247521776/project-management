@@ -21,7 +21,8 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: true
         },
-        titleBarStyle: "hidden"
+        // titleBarStyle: "hidden"
+        frame: false
     });
 
     mainWindow.loadURL(loadURL);

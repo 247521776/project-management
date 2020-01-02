@@ -1,8 +1,8 @@
-import { Card, Icon, Descriptions, Modal, message } from 'antd';
+import { Card, Icon, Descriptions, Modal, message, Popover } from 'antd';
 import React, { Component, PropTypes } from "react";
 import "antd/dist/antd.css";
-import { MenuPage } from "./menu";
-import { EmptyPage } from "./empty";
+import { MenuPage } from "../component/menu";
+import { EmptyPage } from "../component/empty";
 import * as path from "path";
 const { confirm } = Modal;
 
@@ -107,7 +107,7 @@ class HomePage extends Component {
 
     render() {
         const projects = this.state.data.projects;
-        
+
         if (projects.length > 0) {
             return (
                 <div>
@@ -116,24 +116,28 @@ class HomePage extends Component {
                         projects.map((project, index) => {
                             return (
                                 <Card
-                                    style={ cardStyle }
+                                    style={cardStyle}
                                     actions={[
-                                        <Icon
-                                            style={iconStyle}
-                                            index={index}
-                                            onClick={this.onOpen.bind(this, index)}
-                                            type="folder-open"
-                                            theme="twoTone"
-                                            twoToneColor="#4abfaf"
-                                        />,
-                                        <Icon
-                                            style={iconStyle}
-                                            index={index}
-                                            onClick={this.onDelete.bind(this, index)}
-                                            type="delete"
-                                            theme="twoTone"
-                                            twoToneColor="#ff4c4c"
-                                        />
+                                        <Popover placement="topLeft" content="使用vscode打开项目">
+                                            <Icon
+                                                style={iconStyle}
+                                                index={index}
+                                                onClick={this.onOpen.bind(this, index)}
+                                                type="folder-open"
+                                                theme="twoTone"
+                                                twoToneColor="#4abfaf"
+                                            />
+                                        </Popover>,
+                                        <Popover placement="topRight" content="删除项目(本地将无此项目)">
+                                            <Icon
+                                                style={iconStyle}
+                                                index={index}
+                                                onClick={this.onDelete.bind(this, index)}
+                                                type="delete"
+                                                theme="twoTone"
+                                                twoToneColor="#ff4c4c"
+                                            />
+                                        </Popover>
                                     ]}
                                 >
                                     <Descriptions title={project.name}>
