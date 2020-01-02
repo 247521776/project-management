@@ -35,7 +35,7 @@ const AddProjectForm = Form.create()(
                                 },
                             ]
                         })(
-                            <Input allowClear={true} id="projectDir" placeholder="请输入项目路径"/>
+                            <Input allowClear={true} id="projectDir" placeholder="请输入项目路径" />
                         )}
                     </Form.Item>
                 </Form>
@@ -66,7 +66,7 @@ const NewAddProjectForm = Form.create()(
                                 },
                             ]
                         })(
-                            <Input allowClear={true} id="projectPath" placeholder="请输入目录"/>
+                            <Input allowClear={true} id="projectPath" placeholder="请输入目录" />
                         )}
                     </Form.Item>
                     <Form.Item label="git地址" {...formItemLayout}>
@@ -78,7 +78,7 @@ const NewAddProjectForm = Form.create()(
                                 },
                             ]
                         })(
-                            <Input allowClear={true} id="gitPath" placeholder="请输入git地址"/>
+                            <Input allowClear={true} id="gitPath" placeholder="请输入git地址" />
                         )}
                     </Form.Item>
                 </Form>
@@ -95,7 +95,7 @@ export class MenuPage extends Component {
         this.addProject = this.addProject.bind(this);
         this.newAddProject = this.newAddProject.bind(this);
     }
-    state = { 
+    state = {
         visible: false,
         newVisible: false,
         loading: false,
@@ -134,50 +134,64 @@ export class MenuPage extends Component {
     }
 
     addProject() {
-        const projectDir = $("#projectDir").val();
+        const self = this;
+        this.addForm.validateFields((errors, values) => {
+            if (errors !== null) {
+                return;
+            }
 
-        const msg = this.props.onCreate({ projectDir, type: "add" });
-        if (msg) {
-            this.onError(msg);
-            this.setState({
-                visible: false,
-                loading: false,
-                menuClick: false,
-            });
-        }
-        else {
-            this.addForm.resetFields();
-
-            this.setState({
-                visible: false,
-                loading: true,
-                menuClick: false,
-            });
-        }
+            const projectDir = $("#projectDir").val();
+    
+            const msg = self.props.onCreate({ projectDir, type: "add" });
+            if (msg) {
+                self.onError(msg);
+                self.setState({
+                    visible: false,
+                    loading: false,
+                    menuClick: false,
+                });
+            }
+            else {
+                self.addForm.resetFields();
+    
+                self.setState({
+                    visible: false,
+                    loading: true,
+                    menuClick: false,
+                });
+            }
+        });
     }
 
     newAddProject() {
-        const gitPath = $("#gitPath").val();
-        const projectPath = $("#projectPath").val();
+        const self = this;
+        this.newForm.validateFields((errors, values) => {
+            if (errors !== null) {
+                return;
+            }
 
-        const msg = this.props.onCreate({gitPath, type: "new", projectPath});
-        if (msg) {
-            this.onError(msg);
-            this.setState({
-                visible: false,
-                loading: false,
-                menuClick: false,
-            });
-        }
-        else {
-            this.newForm.resetFields();
-
-            this.setState({
-                newVisible: false,
-                loading: true,
-                menuClick: false,
-            });
-        }
+            const gitPath = $("#gitPath").val();
+            const projectPath = $("#projectPath").val();
+    
+            const msg = self.props.onCreate({ gitPath, type: "new", projectPath });
+            if (msg) {
+                self.onError(msg);
+                self.setState({
+                    visible: false,
+                    loading: false,
+                    menuClick: false,
+                });
+            }
+            else {
+                self.newForm.resetFields();
+    
+                self.setState({
+                    newVisible: false,
+                    loading: true,
+                    menuClick: false,
+                });
+            }
+        });
     }
 
     onDropdownVisibleChange(visible) {
@@ -190,7 +204,7 @@ export class MenuPage extends Component {
             this.setState({
                 menuClick: false
             });
-        }        
+        }
     }
 
     render() {
@@ -206,7 +220,7 @@ export class MenuPage extends Component {
                 {this.state.loading ? <LoadingPage /> : ""}
                 <Dropdown overlay={menu} onVisibleChange={this.onDropdownVisibleChange.bind(this)} trigger={["click"]}>
                     <a style={style} className="ant-dropdown-link" href="#">
-                    {this.state.menuClick ? <Icon type="minus-square" theme="twoTone" /> : <Icon type="plus-square" theme="twoTone" />}
+                        {this.state.menuClick ? <Icon type="minus-square" theme="twoTone" /> : <Icon type="plus-square" theme="twoTone" />}
                     </a>
                 </Dropdown>
                 <AddProjectForm

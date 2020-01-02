@@ -9,6 +9,7 @@ export class MenuBuilder {
         const newApplicationMenu = new Menu();
         newApplicationMenu.append(applicationMenu.items[0]);
         newApplicationMenu.append(applicationMenu.items[1]);
+        newApplicationMenu.append(applicationMenu.items[2]);
 
         Menu.setApplicationMenu(newApplicationMenu);
     }
