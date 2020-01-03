@@ -48,7 +48,6 @@ class HomePage extends Component {
                 newVisible: false,
                 loading: false,
             });
-
         });
     }
 

@@ -217,7 +217,7 @@ export class MenuPage extends Component {
 
         return (
             <div>
-                {this.state.loading ? <LoadingPage /> : ""}
+                {this.state.loading ? <LoadingPage tipContent={"努力添加中..."} /> : ""}
                 <Dropdown overlay={menu} onVisibleChange={this.onDropdownVisibleChange.bind(this)} trigger={["click"]}>
                     <a style={style} className="ant-dropdown-link" href="#">
                         {this.state.menuClick ? <Icon type="minus-square" theme="twoTone" /> : <Icon type="plus-square" theme="twoTone" />}

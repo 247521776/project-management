@@ -17,7 +17,7 @@ export class LoadingPage extends Component {
                 cancelButtonProps={{ display: true }}
                 footer={null}
             >
-                <Spin style={style} tip="努力添加中..." />
+                <Spin style={style} tip={this.props.tipContent} />
             </Modal>
         );
     }

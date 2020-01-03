@@ -1,4 +1,7 @@
 import { Menu, BrowserWindow } from "electron";
+import createSettingWindow from "./views/setting";
+
+const env = process.env.NODE_ENV;
 
 export class MenuBuilder {
     browserWindow: BrowserWindow;
@@ -17,9 +20,10 @@ export class MenuBuilder {
     buildMenu() {
         this.browserWindow.webContents.on("context-menu", (e, props) => {
             const { x, y } = props;
-        
-            Menu.buildFromTemplate([
-                {
+            const menuList = [];
+
+            if (env === "dev") {
+                menuList.push({
                     label: "检查元素",
                     role: "toggleDevTools",
                     // icon: `${__dirname}/images/one-piece.png`,
@@ -27,8 +31,19 @@ export class MenuBuilder {
                     click: () => {
                         this.browserWindow.webContents.inspectElement(x, y);
                     }
+                });
+            }
+
+            menuList.push({
+                label: "设置",
+                // icon: `${__dirname}/images/one-piece.png`,
+                accelerator: "Command+,",
+                click: () => {
+                    createSettingWindow();
                 }
-            ]).popup({
+            });
+
+            Menu.buildFromTemplate(menuList).popup({
                 window: this.browserWindow,
                 x,
                 y
@@ -36,4 +51,3 @@ export class MenuBuilder {
         });
     }
 }
-
