@@ -1,7 +1,8 @@
-import { Table, Divider, Icon, Form, Input, Modal, message } from 'antd';
+import { Table, Button, Icon, Form, Input, Modal, message } from 'antd';
 import React, { Component, PropTypes } from "react";
-import LoadingPage from "../component/loading";
-import * as fs from "fs";
+import { LoadingPage } from "../component/loading";
+import $ from "jquery";
+import "../index.css";
 
 const electron = window.require('electron');
 
@@ -19,33 +20,6 @@ const formItemLayout = {
     labelCol: { span: 4 },
     wrapperCol: { span: 14 }
 };
-
-const columns = [
-    {
-        title: '目录名称',
-        dataIndex: 'dirName',
-        width: "100px",
-        key: 'dirName',
-        render: text => <a>{text}</a>,
-    },
-    {
-        title: '目录路径',
-        dataIndex: 'dirPath',
-        key: 'dirPath',
-    },
-    {
-        title: '操作',
-        key: 'action',
-        width: "100px",
-        render: (text, record) => (
-            <span>
-                <a>Invite {record.name}</a>
-                <Divider type="vertical" />
-                <a>Delete</a>
-            </span>
-        ),
-    },
-];
 
 const AddSettingForm = Form.create()(
     (props) => {
@@ -99,14 +73,43 @@ export default class SettingPage extends Component {
         this.hideModal = this.hideModal.bind(this);
         this.onAddSetting = this.onAddSetting.bind(this);
 
-        electron.ipcRenderer.send("getSetting");
-    }
+        const settings = electron.ipcRenderer.sendSync("getSetting");
 
-    state = {
-        visible: false,
-        loading: true,
-        tipContent: "加载中",
-        data: []
+        this.state = {
+            visible: false,
+            loading: false,
+            tipContent: "加载中",
+            data: settings.workspaces
+        }
+
+        this.columns = [
+            {
+                title: '目录名称',
+                dataIndex: 'dirName',
+                width: "100px",
+                key: 'dirName',
+                align: "center"
+            },
+            {
+                title: '目录路径',
+                dataIndex: 'dirPath',
+                align: "center",
+                key: 'dirPath',
+            },
+            {
+                title: '操作',
+                key: 'action',
+                width: "100px",
+                align: "center",
+                render: (text, record) => (
+                    <div>
+                        <Button style={{ "margin-bottom": "5px" }} type="primary">修改</Button>
+                        <br />
+                        <Button type="danger" onClick={this.onDeleteWorkspace.bind(this, record.dirPath)}>删除</Button>
+                    </div>
+                ),
+            },
+        ];
     }
 
     showModal = () => {
@@ -130,22 +133,34 @@ export default class SettingPage extends Component {
 
             const dirName = $("#dirName").val();
             const dirPath = $("#dirPath").val();
-            const isExistDir = fs.existsSync(dirPath);
-
-            if (!isExistDir) {
-                return message.error("目录不存在", 1.5);
-            }
 
             const data = { dirName, dirPath };
-            electron.ipcRenderer.send("addSetting", data);
+            const result = electron.ipcRenderer.sendSync("addWorkspace", data);
+
+            if (result) {
+                return message.error(result, 1.5);
+            }
+
             self.addForm.resetFields();
+
+            const workspaces = this.state.data;
+            workspaces.unshift(data);
 
             self.setState({
                 visible: false,
-                data: this.state.data.push(data)
+                data: workspaces
             });
 
             message.success("添加成功", 1.5);
+        });
+    }
+
+    onDeleteWorkspace(dirPath) {
+        electron.ipcRenderer.send("deleteWorkspace", dirPath);
+
+        const workspaces = this.state.data;
+        this.setState({
+            data: workspaces.filter((workspace) => workspace.dirPath !== dirPath)
         });
     }
 
@@ -154,7 +169,14 @@ export default class SettingPage extends Component {
             <div style={style}>
                 {this.state.loading ? <LoadingPage tipContent={this.state.tipContent} /> : ""}
                 <Icon type="plus-circle" onClick={this.showModal} theme="twoTone" />
-                <Table style={tableStyle} bordered columns={columns} dataSource={this.state.data} />
+                <Table
+                    rowClassName={() => "table-row"}
+                    deleteWorkspace={this.onDeleteWorkspace}
+                    style={tableStyle}
+                    bordered
+                    columns={this.columns}
+                    dataSource={this.state.data}
+                />
                 <AddSettingForm
                     ref={(form) => { this.addForm = form; }}
                     visible={this.state.visible}

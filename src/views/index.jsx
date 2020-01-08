@@ -26,8 +26,9 @@ class HomePage extends Component {
         this.state = this.getOwnState();
         this.onCreate = this.onCreate.bind(this);
         this.onRef = this.onRef.bind(this);
+
         this.state.data = {
-            projects: []
+            projects: [],
         };
 
         electron.ipcRenderer.on('data', (event, message) => {

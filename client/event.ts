@@ -1,7 +1,8 @@
 import { ipcMain, BrowserWindow } from "electron";
 import { spawn } from "child_process";
-import { getProjectList, setProjectList } from "./utils";
+import { getProjectList, setProjectList, getSettings, addWorkspace, getWorkspaces, deleteWorkspace } from "./utils";
 import * as path from "path";
+import * as fs from "fs";
 
 export class Event {
     data: any;
@@ -27,6 +28,47 @@ export class Event {
             } else if (type === "new") {
                 this.newAddProject(projectPath, gitPath);
             }
+        });
+
+        ipcMain.on("getSetting", (event) => {
+            event.returnValue = getSettings();
+        });
+
+        ipcMain.on("addWorkspace", async (event, workspace) => {
+            const { dirPath } = workspace;
+            const isExistDir = fs.existsSync(dirPath);
+
+            if (!isExistDir) {
+                return event.returnValue = "目录不存在";
+            }
+
+            const isDir = await isDirectory(dirPath);
+
+            if (!isDir) {
+                return event.returnValue = "该目录路径不为文件夹";
+            }
+
+            const workspaces = getWorkspaces();
+
+            for (const workspace of workspaces) {
+                if (workspace.dirPath === dirPath) {
+                    return event.returnValue = "目录已添加";
+                }
+            }
+
+            addWorkspace(workspace);
+
+            this.browserWindow.webContents.send("workspace", getWorkspaces());
+            event.returnValue = "";
+        });
+
+        ipcMain.on("getWorkspace", (event) => {
+            event.returnValue = getWorkspaces();
+        });
+
+        ipcMain.on("deleteWorkspace", (event, dirPath) => {
+            deleteWorkspace(dirPath);
+            this.browserWindow.webContents.send("workspace", getWorkspaces());
         });
     }
 
@@ -78,8 +120,16 @@ export class Event {
         });
 
     }
+}
 
-    getSetting() {
-        
-    }
+async function isDirectory(path) {
+    return new Promise((resolve, reject) => {
+        fs.stat(path, (err, stats) => {
+            if (err) {
+                return reject(err);
+            }
+
+            return resolve(stats.isDirectory());
+        });
+    });
 }

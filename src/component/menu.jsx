@@ -1,8 +1,12 @@
-import { Menu, Dropdown, Icon, Modal, Form, Input, message } from "antd";
+import { Menu, Dropdown, Icon, Modal, Form, Input, message, Select } from "antd";
 import React, { Component, PropTypes } from "react";
 import $ from "jquery";
 import "antd/dist/antd.css";
 import { LoadingPage } from "./loading";
+
+const { Option } = Select;
+
+const electron = window.require('electron');
 
 const style = {
     "margin-left": "7px"
@@ -46,8 +50,9 @@ const AddProjectForm = Form.create()(
 
 const NewAddProjectForm = Form.create()(
     (props) => {
-        const { visible, addProject, hideModal, form } = props;
+        const { visible, addProject, hideModal, form, workspaces } = props;
         const { getFieldDecorator } = form;
+
         return (
             <Modal
                 visible={visible}
@@ -59,6 +64,7 @@ const NewAddProjectForm = Form.create()(
                 <Form>
                     <Form.Item label="目录" {...formItemLayout}>
                         {getFieldDecorator('projectPath', {
+                            initialValue: "default_value",
                             rules: [
                                 {
                                     required: true,
@@ -66,7 +72,17 @@ const NewAddProjectForm = Form.create()(
                                 },
                             ]
                         })(
-                            <Input allowClear={true} id="projectPath" placeholder="请输入目录" />
+                            <Select
+                                style={{ width: 120 }}
+                                id="projectPath"
+                            >
+                                <Option value={"default_value"}>请选择目录</Option>
+                                {
+                                    workspaces.map((workspace) => {
+                                        return (<Option value={workspace.dirPath}>{workspace.dirName}</Option>)
+                                    })
+                                }
+                            </Select>
                         )}
                     </Form.Item>
                     <Form.Item label="git地址" {...formItemLayout}>
@@ -94,6 +110,15 @@ export class MenuPage extends Component {
         this.props.onRef(this);
         this.addProject = this.addProject.bind(this);
         this.newAddProject = this.newAddProject.bind(this);
+
+        const workspaces = electron.ipcRenderer.sendSync("getWorkspace");
+        this.state.workspaces = workspaces;
+
+        electron.ipcRenderer.on('workspace', (event, workspaces) => {
+            this.setState({
+                workspaces
+            });
+        });
     }
     state = {
         visible: false,
@@ -141,7 +166,7 @@ export class MenuPage extends Component {
             }
 
             const projectDir = $("#projectDir").val();
-    
+
             const msg = self.props.onCreate({ projectDir, type: "add" });
             if (msg) {
                 self.onError(msg);
@@ -153,7 +178,7 @@ export class MenuPage extends Component {
             }
             else {
                 self.addForm.resetFields();
-    
+
                 self.setState({
                     visible: false,
                     loading: true,
@@ -172,7 +197,11 @@ export class MenuPage extends Component {
 
             const gitPath = $("#gitPath").val();
             const projectPath = $("#projectPath").val();
-    
+
+            if (projectPath === "default_value") {
+                self.onError("请选择目录");
+            }
+
             const msg = self.props.onCreate({ gitPath, type: "new", projectPath });
             if (msg) {
                 self.onError(msg);
@@ -184,7 +213,7 @@ export class MenuPage extends Component {
             }
             else {
                 self.newForm.resetFields();
-    
+
                 self.setState({
                     newVisible: false,
                     loading: true,
@@ -234,6 +263,7 @@ export class MenuPage extends Component {
                     visible={this.state.newVisible}
                     addProject={this.newAddProject}
                     hideModal={this.newHideModal}
+                    workspaces={this.state.workspaces}
                 />
             </div>
         );

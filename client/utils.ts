@@ -12,7 +12,6 @@ interface IProject {
 }
 
 export function getProjectList() {
-    
     const projects = store.get('projects') || [];
 
     for (const project of projects) {
@@ -45,4 +44,27 @@ export function setProjectList(list: any[]) {
 
 export function clearProject() {
     store.clear();
+}
+
+export function getSettings() {
+    const workspaces = store.get('workspace') || [];
+    return {
+        workspaces,
+    };
+}
+
+export function getWorkspaces() {
+    return store.get('workspace') || [];
+}
+
+export function addWorkspace(workspace) {
+    const workspaces = store.get('workspace') || [];
+    workspaces.unshift(workspace);
+    store.set("workspace", workspaces);
+}
+
+export function deleteWorkspace(dirPath) {
+    const workspaces = store.get('workspace') || [];
+    
+    store.set("workspace", workspaces.filter((workspace) => workspace.dirPath !== dirPath));
 }
