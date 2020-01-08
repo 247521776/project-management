@@ -153,7 +153,10 @@ class HomePage extends Component {
         }
         else {
             return (
-                <EmptyPage onRef={this.onRef} onCreate={this.onCreate} />
+                <div>
+                    <MenuPage onRef={this.onRef} onCreate={this.onCreate} />
+                    <EmptyPage onRef={this.onRef} onCreate={this.onCreate} />
+                </div>
             );
         }
     }

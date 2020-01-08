@@ -38,6 +38,10 @@ export function getProjectList() {
     };
 }
 
+export function getProjects() {
+    return store.get('projects') || [];
+}
+
 export function setProjectList(list: any[]) {
     store.set('projects', list);
 }

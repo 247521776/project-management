@@ -10,10 +10,7 @@ export class EmptyPage extends Component {
     render() {
 
         return (
-            <div>
-                <MenuPage onRef={this.props.onRef} onCreate={this.props.onCreate} />
-                <Empty style={emptyStyle} description={<span>暂无数据</span>} />
-            </div>
+            <Empty style={emptyStyle} description={<span>暂无数据</span>} />
         );
     }
 }

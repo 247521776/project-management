@@ -1,8 +1,9 @@
-import { Menu, Dropdown, Icon, Modal, Form, Input, message, Select } from "antd";
+import { Menu, Dropdown, Icon, Modal, Form, Input, message, Select, Tooltip } from "antd";
 import React, { Component, PropTypes } from "react";
 import $ from "jquery";
 import "antd/dist/antd.css";
 import { LoadingPage } from "./loading";
+import * as path from "path";
 
 const { Option } = Select;
 
@@ -12,6 +13,8 @@ const style = {
     "margin-left": "7px"
 };
 
+const selectDefault = "default_value";
+
 const formItemLayout = {
     labelCol: { span: 4 },
     wrapperCol: { span: 14 }
@@ -19,7 +22,7 @@ const formItemLayout = {
 
 const AddProjectForm = Form.create()(
     (props) => {
-        const { visible, addProject, hideModal, form } = props;
+        const { visible, addProject, hideModal, form, workspaces, directories, onSelectChange } = props;
         const { getFieldDecorator } = form;
         return (
             <Modal
@@ -30,16 +33,53 @@ const AddProjectForm = Form.create()(
                 cancelText="取消"
             >
                 <Form>
-                    <Form.Item label="项目路径" {...formItemLayout}>
-                        {getFieldDecorator('projectDir', {
+                    <Form.Item label="目录" {...formItemLayout}>
+                        {getFieldDecorator('workspace', {
+                            initialValue: selectDefault,
                             rules: [
                                 {
                                     required: true,
-                                    message: '请输入项目路径',
+                                    message: '请选择目录',
                                 },
                             ]
                         })(
-                            <Input allowClear={true} id="projectDir" placeholder="请输入项目路径" />
+                            <Select
+                                style={{ width: 120 }}
+                                onChange={onSelectChange}
+                            >
+                                <Option value={selectDefault}>请选择目录</Option>
+                                {
+                                    workspaces.map((workspace) => {
+                                        return (<Option title={workspace.dirPath} value={workspace.dirPath}>
+                                            {workspace.dirName}
+                                        </Option>)
+                                    })
+                                }
+                            </Select>
+                        )}
+                    </Form.Item>
+                    <Form.Item label="项目" {...formItemLayout}>
+                        {getFieldDecorator('projectDir', {
+                            initialValue: selectDefault,
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请选择项目',
+                                },
+                            ]
+                        })(
+                            <Select
+                                style={{ width: 120 }}
+                            >
+                                <Option value={selectDefault}>请选择项目</Option>
+                                {
+                                    directories.map((dirName) => {
+                                        return (<Option title={dirName} value={dirName}>
+                                            {dirName}
+                                        </Option>)
+                                    })
+                                }
+                            </Select>
                         )}
                     </Form.Item>
                 </Form>
@@ -68,18 +108,19 @@ const NewAddProjectForm = Form.create()(
                             rules: [
                                 {
                                     required: true,
-                                    message: '请输入目录',
+                                    message: '请选择目录',
                                 },
                             ]
                         })(
                             <Select
                                 style={{ width: 120 }}
-                                id="projectPath"
                             >
                                 <Option value={"default_value"}>请选择目录</Option>
                                 {
                                     workspaces.map((workspace) => {
-                                        return (<Option value={workspace.dirPath}>{workspace.dirName}</Option>)
+                                        return (<Option title={workspace.dirPath} value={workspace.dirPath}>
+                                            {workspace.dirName}
+                                        </Option>)
                                     })
                                 }
                             </Select>
@@ -94,7 +135,7 @@ const NewAddProjectForm = Form.create()(
                                 },
                             ]
                         })(
-                            <Input allowClear={true} id="gitPath" placeholder="请输入git地址" />
+                            <Input allowClear={true} placeholder="请输入git地址" />
                         )}
                     </Form.Item>
                 </Form>
@@ -110,6 +151,7 @@ export class MenuPage extends Component {
         this.props.onRef(this);
         this.addProject = this.addProject.bind(this);
         this.newAddProject = this.newAddProject.bind(this);
+        this.onSelectChange = this.onSelectChange.bind(this);
 
         const workspaces = electron.ipcRenderer.sendSync("getWorkspace");
         this.state.workspaces = workspaces;
@@ -124,6 +166,7 @@ export class MenuPage extends Component {
         visible: false,
         newVisible: false,
         loading: false,
+        directories: []
     };
 
     showModal = () => {
@@ -165,9 +208,10 @@ export class MenuPage extends Component {
                 return;
             }
 
-            const projectDir = $("#projectDir").val();
+            const projectDir = values.projectDir;
+            const workspace = values.workspace;
 
-            const msg = self.props.onCreate({ projectDir, type: "add" });
+            const msg = self.props.onCreate({ projectDir: path.resolve(workspace, projectDir), type: "add" });
             if (msg) {
                 self.onError(msg);
                 self.setState({
@@ -195,10 +239,10 @@ export class MenuPage extends Component {
                 return;
             }
 
-            const gitPath = $("#gitPath").val();
-            const projectPath = $("#projectPath").val();
+            const gitPath = values.gitPath;
+            const projectPath = values.projectPath;
 
-            if (projectPath === "default_value") {
+            if (projectPath === selectDefault) {
                 self.onError("请选择目录");
             }
 
@@ -236,6 +280,20 @@ export class MenuPage extends Component {
         }
     }
 
+    onSelectChange(dirPath) {
+        if (dirPath === selectDefault) {
+            return this.setState({
+                directories: []
+            });
+        }
+
+        const directories = electron.ipcRenderer.sendSync("getWorkspaceDirectories", dirPath);
+
+        this.setState({
+            directories
+        });
+    }
+
     render() {
         const menu = (
             <Menu>
@@ -257,6 +315,9 @@ export class MenuPage extends Component {
                     visible={this.state.visible}
                     addProject={this.addProject}
                     hideModal={this.hideModal}
+                    workspaces={this.state.workspaces}
+                    directories={this.state.directories}
+                    onSelectChange={this.onSelectChange}
                 />
                 <NewAddProjectForm
                     ref={(form) => { this.newForm = form; }}
