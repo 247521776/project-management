@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow } from "electron";
 import { spawn } from "child_process";
-import { getProjectList, setProjectList, getSettings, addWorkspace, getWorkspaces, deleteWorkspace, getProjects } from "./utils";
+import { getProjectList, setProjectList, getSettings, addWorkspace, getWorkspaces, deleteWorkspace, getProjects, editWorkspace } from "./utils";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -69,6 +69,10 @@ export class Event {
         ipcMain.on("deleteWorkspace", (event, dirPath) => {
             deleteWorkspace(dirPath);
             this.browserWindow.webContents.send("workspace", getWorkspaces());
+        });
+
+        ipcMain.on("editWorkspace", (event, data) => {
+            editWorkspace(data);
         });
 
         ipcMain.on("getWorkspaceDirectories", (event, dirPath) => {

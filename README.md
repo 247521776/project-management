@@ -32,3 +32,13 @@
 ### 打包工具
 
 使用的`electron-builder`打包工具。
+
+## 演示
+
+### 工作空间的添加、修改、删除
+
+<img src="./gif/setting.gif" alt="setting" width="499" />
+
+### 项目的添加、删除
+
+<img src="./gif/project.gif" alt="setting" width="499" />

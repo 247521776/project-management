@@ -72,3 +72,17 @@ export function deleteWorkspace(dirPath) {
     
     store.set("workspace", workspaces.filter((workspace) => workspace.dirPath !== dirPath));
 }
+
+export function editWorkspace(data) {
+    const newData = data.newData;
+    const workspaces = getWorkspaces();
+
+    for (let workspace of workspaces) {
+        if (workspace.dirPath === data.dirPath) {
+            workspace.dirName = newData.dirName;
+            workspace.dirPath = newData.dirPath;
+        }
+    }
+
+    store.set('workspace', workspaces);
+}

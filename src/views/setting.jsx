@@ -1,7 +1,6 @@
 import { Table, Button, Icon, Form, Input, Modal, message } from 'antd';
 import React, { Component, PropTypes } from "react";
 import { LoadingPage } from "../component/loading";
-import $ from "jquery";
 import "../index.css";
 
 const electron = window.require('electron');
@@ -23,7 +22,7 @@ const formItemLayout = {
 
 const AddSettingForm = Form.create()(
     (props) => {
-        const { visible, addSetting, hideModal, form } = props;
+        const { visible, addSetting, hideModal, form, workspace = {} } = props;
         const { getFieldDecorator } = form;
         return (
             <Modal
@@ -36,6 +35,7 @@ const AddSettingForm = Form.create()(
                 <Form>
                     <Form.Item label="目录名称" {...formItemLayout}>
                         {getFieldDecorator('dirName', {
+                            initialValue: workspace.dirName || "",
                             rules: [
                                 {
                                     required: true,
@@ -43,11 +43,12 @@ const AddSettingForm = Form.create()(
                                 },
                             ]
                         })(
-                            <Input allowClear={true} id="dirName" placeholder="请输入目录名称" />
+                            <Input allowClear={true} placeholder="请输入目录名称" />
                         )}
                     </Form.Item>
                     <Form.Item label="目录路径" {...formItemLayout}>
                         {getFieldDecorator('dirPath', {
+                            initialValue: workspace.dirPath || "",
                             rules: [
                                 {
                                     required: true,
@@ -55,7 +56,7 @@ const AddSettingForm = Form.create()(
                                 },
                             ]
                         })(
-                            <Input allowClear={true} id="dirPath" placeholder="请输入目录路径" />
+                            <Input allowClear={true} placeholder="请输入目录路径" />
                         )}
                     </Form.Item>
                 </Form>
@@ -72,6 +73,7 @@ export default class SettingPage extends Component {
         this.showModal = this.showModal.bind(this);
         this.hideModal = this.hideModal.bind(this);
         this.onAddSetting = this.onAddSetting.bind(this);
+        this.onSave = this.onSave.bind(this);
 
         const settings = electron.ipcRenderer.sendSync("getSetting");
 
@@ -103,7 +105,7 @@ export default class SettingPage extends Component {
                 align: "center",
                 render: (text, record) => (
                     <div>
-                        <Button style={{ "margin-bottom": "5px" }} type="primary">修改</Button>
+                        <Button style={{ "margin-bottom": "5px" }} onClick={this.editShowModal.bind(this, record)} type="primary">修改</Button>
                         <br />
                         <Button type="danger" onClick={this.onDeleteWorkspace.bind(this, record.dirPath)}>删除</Button>
                     </div>
@@ -118,21 +120,36 @@ export default class SettingPage extends Component {
         });
     };
 
+    editShowModal = (workspace) => {
+        this.editForm.resetFields();
+
+        this.setState({
+            editVisible: true,
+            workspace: workspace
+        });
+    };
+
     hideModal = () => {
         this.setState({
             visible: false,
         });
     };
 
+    editHideModal = () => {
+        this.setState({
+            editVisible: false,
+        });
+    };
+
     onAddSetting() {
         const self = this;
-        this.addForm.validateFields((errors) => {
+        this.addForm.validateFields((errors, values) => {
             if (errors !== null) {
                 return;
             }
 
-            const dirName = $("#dirName").val();
-            const dirPath = $("#dirPath").val();
+            const dirName = values.dirName;
+            const dirPath = values.dirPath;
 
             const data = { dirName, dirPath };
             const result = electron.ipcRenderer.sendSync("addWorkspace", data);
@@ -164,6 +181,39 @@ export default class SettingPage extends Component {
         });
     }
 
+    onSave() {
+        const self = this;
+        this.editForm.validateFields((errors, values) => {
+            if (errors !== null) {
+                return;
+            }
+
+            const dirName = values.dirName;
+            const dirPath = values.dirPath;
+
+            const data = { newData: { dirName, dirPath }, ...this.state.workspace };
+            electron.ipcRenderer.send("editWorkspace", data);
+
+            self.editForm.resetFields();
+
+            const workspaces = this.state.data;
+
+            for (const workspace of this.state.data) {
+                if (workspace.dirPath === this.state.workspace.dirPath) {
+                    workspace.dirName = dirName;
+                    workspace.dirPath = dirPath;
+                }
+            }
+
+            self.setState({
+                editVisible: false,
+                data: workspaces
+            });
+
+            message.success("修改成功", 1.5);
+        });
+    }
+
     render() {
         return (
             <div style={style}>
@@ -182,6 +232,13 @@ export default class SettingPage extends Component {
                     visible={this.state.visible}
                     addSetting={this.onAddSetting}
                     hideModal={this.hideModal}
+                />
+                <AddSettingForm
+                    ref={(form) => { this.editForm = form; }}
+                    visible={this.state.editVisible}
+                    addSetting={this.onSave}
+                    hideModal={this.editHideModal}
+                    workspace={this.state.workspace}
                 />
             </div>
         );

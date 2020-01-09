@@ -26,7 +26,6 @@
   "dependencies": {
     "antd": "^3.26.4",
     "electron-store": "^5.1.0",
-    "jquery": "^3.2.1",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "react-router-dom": "^5.1.2",

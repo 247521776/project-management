@@ -1,6 +1,5 @@
 import { Menu, Dropdown, Icon, Modal, Form, Input, message, Select, Tooltip } from "antd";
 import React, { Component, PropTypes } from "react";
-import $ from "jquery";
 import "antd/dist/antd.css";
 import { LoadingPage } from "./loading";
 import * as path from "path";
