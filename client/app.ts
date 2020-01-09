@@ -7,7 +7,6 @@ import { getProjectList, setProjectList, clearProject } from "./utils";
 
 const loadURL = `file://${path.resolve(__dirname, "../")}/build/index.html#/homePage`;
 
-clearProject()
 let mainWindow: BrowserWindow | null;
 
 function createWindow() {
