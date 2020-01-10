@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/247521776/project-management#readme",
   "dependencies": {
+    "@types/shelljs": "^0.8.6",
     "antd": "^3.26.4",
     "electron-store": "^5.1.0",
     "react": "^15.6.1",

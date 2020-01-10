@@ -3,6 +3,7 @@ import React, { Component, PropTypes } from "react";
 import "antd/dist/antd.css";
 import { MenuPage } from "../component/menu";
 import { EmptyPage } from "../component/empty";
+import { StepPage } from "../component/step";
 import * as path from "path";
 const { confirm } = Modal;
 
@@ -38,7 +39,7 @@ class HomePage extends Component {
         });
 
         electron.ipcRenderer.on('loaded', (event, result) => {
-            message.success('添加成功');
+            message.success('添加成功', 1.5);
 
             this.setState({
                 data: result
@@ -105,6 +106,10 @@ class HomePage extends Component {
         electron.ipcRenderer.send("addProject", data);
     }
 
+    onDownloadDepend(dir) {
+        electron.ipcRenderer.send("downloadDepend", dir);
+    }
+
     render() {
         const projects = this.state.data.projects;
 
@@ -112,6 +117,7 @@ class HomePage extends Component {
             return (
                 <div>
                     <MenuPage onRef={this.onRef} onCreate={this.onCreate} />
+                    <StepPage />
                     {
                         projects.map((project, index) => {
                             return (
@@ -126,6 +132,14 @@ class HomePage extends Component {
                                                 type="folder-open"
                                                 theme="twoTone"
                                                 twoToneColor="#4abfaf"
+                                            />
+                                        </Tooltip>,
+                                        <Tooltip title="下载项目依赖" arrowPointAtCenter>
+                                            <Icon
+                                                style={iconStyle}
+                                                index={index}
+                                                onClick={this.onDownloadDepend.bind(this, project.dir)}
+                                                type="download"
                                             />
                                         </Tooltip>,
                                         <Tooltip title="从本地删除该项目" arrowPointAtCenter>

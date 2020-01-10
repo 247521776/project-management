@@ -2,6 +2,8 @@ import { BrowserWindow } from "electron";
 import { MenuBuilder } from "../menu";
 import * as path from "path";
 
+const env = process.env.NODE_ENV;
+
 const loadURL = `file://${path.resolve(
     __dirname,
     "../../"
@@ -26,8 +28,10 @@ function createSettingWindow() {
         mainWindow = null;
     });
 
-    const menuBuilder = new MenuBuilder(mainWindow);
-    menuBuilder.buildMenu();
+    if (env === "dev") {
+        const menuBuilder = new MenuBuilder(mainWindow);
+        menuBuilder.buildMenu();
+    }
 }
 
 export default createSettingWindow;

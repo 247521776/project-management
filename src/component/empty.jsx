@@ -1,6 +1,5 @@
 import { Empty } from "antd";
 import React, { Component } from "react";
-import { MenuPage } from "./menu";
 
 const emptyStyle = {
     "padding-top": "50%"

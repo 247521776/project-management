@@ -1,4 +1,5 @@
-import { BrowserWindow, app, globalShortcut } from "electron";
+import { BrowserWindow, globalShortcut } from "electron";
+import createSettingWindow from "./views/setting";
 
 export class Shortcut {
     public browserWindow: BrowserWindow;
@@ -10,6 +11,7 @@ export class Shortcut {
 
     register() {
         this.registerDevTools();
+        this.registerSetting();
     }
 
     registerDevTools() {
@@ -22,6 +24,16 @@ export class Shortcut {
             }
 
             this.openDevTools = !this.openDevTools;
+        });
+
+        if (!ret) {
+            console.log("registration failed");
+        }
+    }
+
+    registerSetting() {
+        const ret = globalShortcut.register("Ctrl+,", () => {
+            createSettingWindow();
         });
 
         if (!ret) {

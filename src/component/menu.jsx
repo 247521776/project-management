@@ -1,4 +1,4 @@
-import { Menu, Dropdown, Icon, Modal, Form, Input, message, Select, Tooltip } from "antd";
+import { Menu, Dropdown, Icon, Modal, Form, Input, message, Select } from "antd";
 import React, { Component, PropTypes } from "react";
 import "antd/dist/antd.css";
 import { LoadingPage } from "./loading";

@@ -37,7 +37,7 @@ export class MenuBuilder {
             menuList.push({
                 label: "设置",
                 // icon: `${__dirname}/images/one-piece.png`,
-                accelerator: "Command+,",
+                accelerator: "Ctrl+,",
                 click: () => {
                     createSettingWindow();
                 }

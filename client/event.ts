@@ -1,8 +1,19 @@
 import { ipcMain, BrowserWindow } from "electron";
-import { spawn } from "child_process";
-import { getProjectList, setProjectList, getSettings, addWorkspace, getWorkspaces, deleteWorkspace, getProjects, editWorkspace } from "./utils";
+import { spawn, spawnSync } from "child_process";
+import {
+    getProjectList,
+    setProjectList,
+    getSettings,
+    addWorkspace,
+    getWorkspaces,
+    deleteWorkspace,
+    getProjects,
+    editWorkspace
+} from "./utils";
 import * as path from "path";
 import * as fs from "fs";
+
+let downloadShell;
 
 export class Event {
     data: any;
@@ -30,7 +41,7 @@ export class Event {
             }
         });
 
-        ipcMain.on("getSetting", (event) => {
+        ipcMain.on("getSetting", event => {
             event.returnValue = getSettings();
         });
 
@@ -39,20 +50,20 @@ export class Event {
             const isExistDir = fs.existsSync(dirPath);
 
             if (!isExistDir) {
-                return event.returnValue = "目录不存在";
+                return (event.returnValue = "目录不存在");
             }
 
             const isDir = await isDirectory(dirPath);
 
             if (!isDir) {
-                return event.returnValue = "该目录路径不为文件夹";
+                return (event.returnValue = "该目录路径不为文件夹");
             }
 
             const workspaces = getWorkspaces();
 
             for (const workspace of workspaces) {
                 if (workspace.dirPath === dirPath) {
-                    return event.returnValue = "目录已添加";
+                    return (event.returnValue = "目录已添加");
                 }
             }
 
@@ -62,7 +73,7 @@ export class Event {
             event.returnValue = "";
         });
 
-        ipcMain.on("getWorkspace", (event) => {
+        ipcMain.on("getWorkspace", event => {
             event.returnValue = getWorkspaces();
         });
 
@@ -75,13 +86,42 @@ export class Event {
             editWorkspace(data);
         });
 
+        ipcMain.on("downloadDepend", (event, dirPath) => {
+            this.browserWindow.webContents.send("downloadDepend-setting");
+
+            this.browserWindow.webContents.send("downloadDepend");
+
+            downloadShell = spawn(`cd ${dirPath} && npm install`, {
+                shell: true
+            });
+
+            downloadShell.on("close", code => {
+                if (code === 0) {
+                    this.browserWindow.webContents.send("downloadDepend-done");
+                } else {
+                    this.browserWindow.webContents.send("downloadDepend-error");
+                }
+
+                downloadShell = null;
+            });
+        });
+
+        ipcMain.on("downloadDepend-cancel", event => {
+            if (downloadShell) {
+                downloadShell.kill();
+            }
+        });
+
         ipcMain.on("getWorkspaceDirectories", (event, dirPath) => {
             const projects = getProjects();
             const directories = fs.readdirSync(dirPath);
             const projectPaths = projects.map(project => project.dir);
 
-            const filterAfterDirectories = directories.filter((dirName) => {
-                return dirName.indexOf(".") === -1 && !projectPaths.includes(path.resolve(dirPath, dirName))
+            const filterAfterDirectories = directories.filter(dirName => {
+                return (
+                    dirName.indexOf(".") === -1 &&
+                    !projectPaths.includes(path.resolve(dirPath, dirName))
+                );
             });
 
             event.returnValue = filterAfterDirectories;
@@ -134,7 +174,6 @@ export class Event {
         result.on("close", () => {
             this.browserWindow.webContents.send("loaded", getProjectList());
         });
-
     }
 }
 
