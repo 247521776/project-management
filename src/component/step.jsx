@@ -5,44 +5,45 @@ const { Step } = Steps;
 
 const electron = window.require('electron');
 
+const stateDefault = {
+    visible: false,
+    current: 0,
+    status: "process"
+};
+
 export class StepPage extends Component {
     constructor(props) {
         super(props);
 
-        this.state = {
-            visible: false,
-            current: 0,
-            status: "process"
-        }
+        this.onCancel = this.onCancel.bind(this);
 
-        electron.ipcRenderer.on('downloadDepend-setting', (event) => {
+        this.state = stateDefault;
+
+        electron.ipcRenderer.on('downloadDepend-setting', () => {
             this.setState({
                 visible: true
             });
         });
 
-        electron.ipcRenderer.on('downloadDepend', (event) => {
+        electron.ipcRenderer.on('downloadDepend', () => {
             this.setState({
                 current: 1
             });
         });
 
-        electron.ipcRenderer.on('downloadDepend-error', (event) => {
+        electron.ipcRenderer.on('downloadDepend-error', () => {
             this.setState({
                 status: "error"
             });
         });
 
-        electron.ipcRenderer.on('downloadDepend-done', (event, current) => {
+        electron.ipcRenderer.on('downloadDepend-done', () => {
             this.setState({
-                current
+                current: 2
             });
 
             const timeout = setTimeout(() => {
-                this.setState({
-                    current: 0,
-                    visible: false
-                });
+                this.setState(stateDefault);
 
                 clearTimeout(timeout);
             }, 1500);
@@ -51,6 +52,8 @@ export class StepPage extends Component {
 
     onCancel() {
         electron.ipcRenderer.send("downloadDepend-cancel");
+
+        this.setState(stateDefault);
     }
 
     render() {

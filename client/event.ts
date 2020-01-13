@@ -96,6 +96,11 @@ export class Event {
             });
 
             downloadShell.on("close", code => {
+                if(code === null) {
+                    downloadShell = null;
+                    return;
+                }
+
                 if (code === 0) {
                     this.browserWindow.webContents.send("downloadDepend-done");
                 } else {
