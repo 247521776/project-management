@@ -27,11 +27,11 @@ export class Event {
         });
 
         ipcMain.on("addProject", (event, data) => {
-            const { projectDir, type, projectPath, gitPath, sourceId } = data;
+            const { projectDir, type, projectPath, gitPath, sourceId, installCmd } = data;
             if (type === "add") {
-                this.addProject(projectDir, sourceId);
+                this.addProject(projectDir, sourceId, installCmd);
             } else if (type === "new") {
-                this.newAddProject(projectPath, gitPath, sourceId);
+                this.newAddProject(projectPath, gitPath, sourceId, installCmd);
             }
         });
 
@@ -64,10 +64,11 @@ export class Event {
         });
     }
 
-    addProject(projectDir, sourceId) {
+    addProject(projectDir, sourceId, installCmd) {
         this.data.projects.unshift({
             dir: projectDir,
-            sourceId
+            sourceId,
+            installCmd
         });
 
         utils.setProjectList(this.data.projects);
@@ -75,12 +76,13 @@ export class Event {
         this.browserWindow.webContents.send("loaded", utils.getProjectList());
     }
 
-    newAddProject(projectPath, gitPath, sourceId) {
+    newAddProject(projectPath, gitPath, sourceId, installCmd) {
         const splitResult = gitPath.split("/");
         const projectName = splitResult[splitResult.length - 1].split(".")[0];
         this.data.projects.unshift({
             dir: path.resolve(projectPath, projectName),
-            sourceId
+            sourceId,
+            installCmd
         });
 
         utils.setProjectList(this.data.projects);

@@ -1,4 +1,4 @@
-import { Card, Icon, Descriptions, Modal, message, Tooltip, Form, Select } from 'antd';
+import { Card, Icon, Descriptions, Modal, message, Tooltip, Form, Select, Radio } from 'antd';
 import React, { Component, PropTypes } from "react";
 import "antd/dist/antd.css";
 import { MenuPage } from "../component/menu";
@@ -29,8 +29,10 @@ const formItemLayout = {
 
 const EditProject = Form.create()(
     (props) => {
-        const { visible, editProject, hideModal, form, sourceId, sources } = props;
+        const { visible, editProject, hideModal, form, project, sources } = props;
         const { getFieldDecorator } = form;
+        const { sourceId, installCmd } = project;
+
         return (
             <Modal
                 visible={visible}
@@ -40,6 +42,22 @@ const EditProject = Form.create()(
                 cancelText="取消"
             >
                 <Form>
+                    <Form.Item label="下载依赖命令" {...formItemLayout}>
+                        {getFieldDecorator('installCmd', {
+                            initialValue: installCmd,
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请选择下载依赖命令',
+                                },
+                            ]
+                        })(
+                            <Radio.Group>
+                                <Radio value={1}>npm</Radio>
+                                <Radio value={2}>yarn</Radio>
+                            </Radio.Group>
+                        )}
+                    </Form.Item>
                     <Form.Item label="依赖源" {...formItemLayout}>
                         {getFieldDecorator('sourceId', {
                             initialValue: sourceId,
@@ -278,7 +296,7 @@ class HomePage extends Component {
                         visible={this.state.editSourceVisible}
                         editProject={this.onEditProject}
                         hideModal={this.hideModal}
-                        sourceId={this.state.project.sourceId}
+                        project={this.state.project}
                         sources={this.state.sources}
                     />
                 </div>

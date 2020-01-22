@@ -22,6 +22,7 @@ export default class SourceEvent {
                 }
             }
 
+            source.isDefault = false;
             const newData = utils.addSource(source);
 
             this.browserWindow.webContents.send("source", utils.getSources());

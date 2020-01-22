@@ -4,9 +4,12 @@ import * as utils from "../utils";
 import { spawn, spawnSync } from "child_process";
 import * as path from "path";
 
+const { InstallCmd } = utils;
+
 let downloadShell;
 const shellOption = {
-    shell: true
+    shell: true,
+    timeout: 180000
 };
 
 export default class WorkspaceEvent {
@@ -124,7 +127,7 @@ export default class WorkspaceEvent {
 
             this.browserWindow.webContents.send("downloadDepend");
 
-            downloadShell = spawn(`cd ${dirPath} && npm install`, shellOption);
+            downloadShell = spawn(`cd ${dirPath} && ${ project.InstallCmd === InstallCmd.npm ? "npm install" : "yarn" }`, shellOption);
 
             downloadShell.on("close", code => {
                 if(code === null) {

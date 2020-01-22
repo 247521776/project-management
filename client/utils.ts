@@ -5,12 +5,18 @@ const Store = require('electron-store');
 
 const store = new Store();
 
+export enum InstallCmd {
+    npm = 1,
+    yarn = 2,
+};
+
 export interface Project {
     sourceId: string;
     dir: string;
     name: string;
     description: string;
     version: string;
+    installCmd: InstallCmd;
 }
 
 export interface Workspace {
@@ -20,9 +26,10 @@ export interface Workspace {
 }
 
 export interface Source {
-    id: string;
+    id?: string;
     sourceName: string;
     source: string;
+    isDefault: boolean;
 }
 
 export function getProjectList() {
@@ -120,7 +127,7 @@ export function editWorkspace(data) {
     store.set('workspace', workspaces);
 }
 
-export function getSources() {
+export function getSources(): Source[] {
     return store.get('source') || [];
 }
 

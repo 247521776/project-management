@@ -1,4 +1,4 @@
-import { Menu, Dropdown, Icon, Modal, Form, Input, message, Select } from "antd";
+import { Menu, Dropdown, Icon, Modal, Form, Input, message, Select, Radio } from "antd";
 import React, { Component, PropTypes } from "react";
 import "antd/dist/antd.css";
 import { LoadingPage } from "./loading";
@@ -19,6 +19,10 @@ const formItemLayout = {
     wrapperCol: { span: 14 }
 };
 
+const formStyle = {
+    top: 40
+}
+
 const AddProjectForm = Form.create()(
     (props) => {
         const { visible, addProject, hideModal, form, workspaces, directories, onSelectChange, sources } = props;
@@ -28,6 +32,7 @@ const AddProjectForm = Form.create()(
                 visible={visible}
                 onOk={addProject}
                 onCancel={hideModal}
+                style={formStyle}
                 okText="确认"
                 cancelText="取消"
             >
@@ -81,6 +86,22 @@ const AddProjectForm = Form.create()(
                             </Select>
                         )}
                     </Form.Item>
+                    <Form.Item label="下载依赖命令" {...formItemLayout}>
+                        {getFieldDecorator('installCmd', {
+                            initialValue: 1,
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请选择下载依赖命令',
+                                },
+                            ]
+                        })(
+                            <Radio.Group>
+                                <Radio value={1}>npm</Radio>
+                                <Radio value={2}>yarn</Radio>
+                            </Radio.Group>
+                        )}
+                    </Form.Item>
                     <Form.Item label="依赖源" {...formItemLayout}>
                         {getFieldDecorator('sourceId', {
                             initialValue: selectDefault,
@@ -119,6 +140,7 @@ const NewAddProjectForm = Form.create()(
         return (
             <Modal
                 visible={visible}
+                style={formStyle}
                 onOk={addProject}
                 onCancel={hideModal}
                 okText="确认"
@@ -159,6 +181,22 @@ const NewAddProjectForm = Form.create()(
                             ]
                         })(
                             <Input allowClear={true} placeholder="请输入git地址" />
+                        )}
+                    </Form.Item>
+                    <Form.Item label="下载依赖命令" {...formItemLayout}>
+                        {getFieldDecorator('installCmd', {
+                            initialValue: 1,
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请选择下载依赖命令',
+                                },
+                            ]
+                        })(
+                            <Radio.Group>
+                                <Radio value={1}>npm</Radio>
+                                <Radio value={2}>yarn</Radio>
+                            </Radio.Group>
                         )}
                     </Form.Item>
                     <Form.Item label="依赖源" {...formItemLayout}>
@@ -208,7 +246,7 @@ export class MenuPage extends Component {
                 workspaces
             });
         });
-        
+
         this.state.sources = props.sources;
     }
     state = {
@@ -260,12 +298,13 @@ export class MenuPage extends Component {
             const projectDir = values.projectDir;
             const workspace = values.workspace;
             const sourceId = values.sourceId;
+            const installCmd = values.installCmd;
 
             if (sourceId === selectDefault) {
                 self.onError("请选择依赖源");
             }
 
-            const msg = self.props.onCreate({ projectDir: path.resolve(workspace, projectDir), type: "add", sourceId });
+            const msg = self.props.onCreate({ projectDir: path.resolve(workspace, projectDir), type: "add", sourceId, installCmd });
             if (msg) {
                 self.onError(msg);
                 self.setState({
@@ -296,6 +335,7 @@ export class MenuPage extends Component {
             const gitPath = values.gitPath;
             const projectPath = values.projectPath;
             const sourceId = values.sourceId;
+            const installCmd = values.installCmd;
 
             if (projectPath === selectDefault) {
                 self.onError("请选择目录");
@@ -305,7 +345,7 @@ export class MenuPage extends Component {
                 self.onError("请选择依赖源");
             }
 
-            const msg = self.props.onCreate({ gitPath, type: "new", projectPath, sourceId });
+            const msg = self.props.onCreate({ gitPath, type: "new", projectPath, sourceId, installCmd });
             if (msg) {
                 self.onError(msg);
                 self.setState({

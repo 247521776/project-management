@@ -3,11 +3,13 @@ import { MenuBuilder } from "./menu";
 import { Shortcut } from "./shortcut";
 import { Event } from "./event";
 import * as path from "path";
-import { getProjectList, setProjectList, clear } from './utils';
+import { getProjectList, setProjectList, addSource, getSources } from './utils';
 
 const loadURL = `file://${path.resolve(__dirname, "../")}/build/index.html#/homePage`;
 
 let mainWindow: BrowserWindow | null;
+
+init();
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -62,3 +64,31 @@ app.on("will-quit", () => {
     // 注销所有快捷键
     globalShortcut.unregisterAll();
 });
+
+function init() {
+    const sources = getSources();
+    const defaultSource = [
+        {
+            sourceName: "npm",
+            source: "https://registry.npmjs.org/",
+            isDefault: true,
+        },
+        {
+            sourceName: "taobao",
+            source: "https://registry.npm.taobao.org/",
+            isDefault: true,
+        },
+    ];
+
+    for (const source of sources) {
+        for (const def of defaultSource) {
+            if (source.source === def.source) {
+                return;
+            }
+        }
+    }
+
+    for (const def of defaultSource) {
+        addSource(def);
+    }
+}

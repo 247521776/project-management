@@ -122,6 +122,7 @@ export default class SettingPage extends Component {
         super(props);
 
         const settings = electron.ipcRenderer.sendSync("getSetting");
+        const sources = settings.sources.filter(source => !source.isDefault);
 
         this.state = {
             visible: false,
@@ -129,7 +130,7 @@ export default class SettingPage extends Component {
             loading: false,
             tipContent: "加载中",
             data: settings.workspaces,
-            sources: settings.sources
+            sources
         }
 
         this.columns = [
