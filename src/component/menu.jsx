@@ -21,7 +21,7 @@ const formItemLayout = {
 
 const AddProjectForm = Form.create()(
     (props) => {
-        const { visible, addProject, hideModal, form, workspaces, directories, onSelectChange } = props;
+        const { visible, addProject, hideModal, form, workspaces, directories, onSelectChange, sources } = props;
         const { getFieldDecorator } = form;
         return (
             <Modal
@@ -81,6 +81,30 @@ const AddProjectForm = Form.create()(
                             </Select>
                         )}
                     </Form.Item>
+                    <Form.Item label="依赖源" {...formItemLayout}>
+                        {getFieldDecorator('sourceId', {
+                            initialValue: selectDefault,
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请选择依赖源',
+                                },
+                            ]
+                        })(
+                            <Select
+                                style={{ width: 120 }}
+                            >
+                                <Option value={selectDefault}>请选择依赖源</Option>
+                                {
+                                    sources.map((source) => {
+                                        return (<Option title={source.source} value={source.id}>
+                                            {source.sourceName}
+                                        </Option>)
+                                    })
+                                }
+                            </Select>
+                        )}
+                    </Form.Item>
                 </Form>
             </Modal>
         );
@@ -89,7 +113,7 @@ const AddProjectForm = Form.create()(
 
 const NewAddProjectForm = Form.create()(
     (props) => {
-        const { visible, addProject, hideModal, form, workspaces } = props;
+        const { visible, addProject, hideModal, form, workspaces, sources } = props;
         const { getFieldDecorator } = form;
 
         return (
@@ -137,6 +161,30 @@ const NewAddProjectForm = Form.create()(
                             <Input allowClear={true} placeholder="请输入git地址" />
                         )}
                     </Form.Item>
+                    <Form.Item label="依赖源" {...formItemLayout}>
+                        {getFieldDecorator('sourceId', {
+                            initialValue: selectDefault,
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请选择依赖源',
+                                },
+                            ]
+                        })(
+                            <Select
+                                style={{ width: 120 }}
+                            >
+                                <Option value={selectDefault}>请选择依赖源</Option>
+                                {
+                                    sources.map((source) => {
+                                        return (<Option title={source.source} value={source.id}>
+                                            {source.sourceName}
+                                        </Option>)
+                                    })
+                                }
+                            </Select>
+                        )}
+                    </Form.Item>
                 </Form>
             </Modal>
         );
@@ -144,8 +192,8 @@ const NewAddProjectForm = Form.create()(
 );
 
 export class MenuPage extends Component {
-    constructor() {
-        super(...arguments);
+    constructor(props) {
+        super(props);
 
         this.props.onRef(this);
         this.addProject = this.addProject.bind(this);
@@ -160,6 +208,8 @@ export class MenuPage extends Component {
                 workspaces
             });
         });
+        
+        this.state.sources = props.sources;
     }
     state = {
         visible: false,
@@ -209,8 +259,13 @@ export class MenuPage extends Component {
 
             const projectDir = values.projectDir;
             const workspace = values.workspace;
+            const sourceId = values.sourceId;
 
-            const msg = self.props.onCreate({ projectDir: path.resolve(workspace, projectDir), type: "add" });
+            if (sourceId === selectDefault) {
+                self.onError("请选择依赖源");
+            }
+
+            const msg = self.props.onCreate({ projectDir: path.resolve(workspace, projectDir), type: "add", sourceId });
             if (msg) {
                 self.onError(msg);
                 self.setState({
@@ -240,12 +295,17 @@ export class MenuPage extends Component {
 
             const gitPath = values.gitPath;
             const projectPath = values.projectPath;
+            const sourceId = values.sourceId;
 
             if (projectPath === selectDefault) {
                 self.onError("请选择目录");
             }
 
-            const msg = self.props.onCreate({ gitPath, type: "new", projectPath });
+            if (sourceId === selectDefault) {
+                self.onError("请选择依赖源");
+            }
+
+            const msg = self.props.onCreate({ gitPath, type: "new", projectPath, sourceId });
             if (msg) {
                 self.onError(msg);
                 self.setState({
@@ -315,6 +375,7 @@ export class MenuPage extends Component {
                     addProject={this.addProject}
                     hideModal={this.hideModal}
                     workspaces={this.state.workspaces}
+                    sources={this.state.sources}
                     directories={this.state.directories}
                     onSelectChange={this.onSelectChange}
                 />
@@ -324,6 +385,7 @@ export class MenuPage extends Component {
                     addProject={this.newAddProject}
                     hideModal={this.newHideModal}
                     workspaces={this.state.workspaces}
+                    sources={this.state.sources}
                 />
             </div>
         );

@@ -1,7 +1,13 @@
-import { Table, Button, Icon, Form, Input, Modal, message } from 'antd';
+import { Table, Button, Icon, Form, Input, Modal, message, Tabs } from 'antd';
 import React, { Component, PropTypes } from "react";
 import { LoadingPage } from "../component/loading";
 import "../index.css";
+
+const { TabPane } = Tabs;
+const { confirm } = Modal;
+
+const workspaceType = "workspace";
+const sourceType = "source";
 
 const electron = window.require('electron');
 
@@ -65,23 +71,65 @@ const AddSettingForm = Form.create()(
     }
 );
 
+const AddSourceForm = Form.create()(
+    (props) => {
+        const { visible, addSource, hideModal, form, source = {} } = props;
+        const { getFieldDecorator } = form;
+        return (
+            <Modal
+                visible={visible}
+                onOk={addSource}
+                onCancel={hideModal}
+                okText="确认"
+                cancelText="取消"
+            >
+                <Form>
+                    <Form.Item label="别名" {...formItemLayout}>
+                        {getFieldDecorator('sourceName', {
+                            initialValue: source.sourceName || "",
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请输入别名',
+                                },
+                            ]
+                        })(
+                            <Input allowClear={true} placeholder="请输入别名" />
+                        )}
+                    </Form.Item>
+                    <Form.Item label="依赖源" {...formItemLayout}>
+                        {getFieldDecorator('source', {
+                            initialValue: source.source || "",
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请输入依赖源',
+                                },
+                            ]
+                        })(
+                            <Input allowClear={true} placeholder="请输入依赖源" />
+                        )}
+                    </Form.Item>
+                </Form>
+            </Modal>
+        );
+    }
+);
+
 export default class SettingPage extends Component {
 
     constructor(props) {
         super(props);
 
-        this.showModal = this.showModal.bind(this);
-        this.hideModal = this.hideModal.bind(this);
-        this.onAddSetting = this.onAddSetting.bind(this);
-        this.onSave = this.onSave.bind(this);
-
         const settings = electron.ipcRenderer.sendSync("getSetting");
 
         this.state = {
             visible: false,
+            sourceVisible: false,
             loading: false,
             tipContent: "加载中",
-            data: settings.workspaces
+            data: settings.workspaces,
+            sources: settings.sources
         }
 
         this.columns = [
@@ -105,141 +153,329 @@ export default class SettingPage extends Component {
                 align: "center",
                 render: (text, record) => (
                     <div>
-                        <Button style={{ "margin-bottom": "5px" }} onClick={this.editShowModal.bind(this, record)} type="primary">修改</Button>
+                        <Button style={{ "margin-bottom": "5px" }} onClick={this.editShowModal.bind(this, workspaceType, record)} type="primary">修改</Button>
                         <br />
-                        <Button type="danger" onClick={this.onDeleteWorkspace.bind(this, record.dirPath)}>删除</Button>
+                        <Button type="danger" onClick={this.onDelete.bind(this, workspaceType, record.id)}>删除</Button>
+                    </div>
+                ),
+            },
+        ];
+
+        this.sourceColumns = [
+            {
+                title: '别名',
+                dataIndex: 'sourceName',
+                width: "100px",
+                key: 'sourceName',
+                align: "center"
+            },
+            {
+                title: '依赖源',
+                dataIndex: 'source',
+                align: "center",
+                key: 'source',
+            },
+            {
+                title: '操作',
+                key: 'action',
+                width: "100px",
+                align: "center",
+                render: (text, record) => (
+                    <div>
+                        <Button style={{ "margin-bottom": "5px" }} onClick={this.editShowModal.bind(this, sourceType, record)} type="primary">修改</Button>
+                        <br />
+                        <Button type="danger" onClick={this.onDelete.bind(this, sourceType, record.id)}>删除</Button>
                     </div>
                 ),
             },
         ];
     }
 
-    showModal = () => {
-        this.setState({
-            visible: true,
-        });
+    showModal = (type) => {
+        if (type === workspaceType) {
+            this.setState({
+                visible: true,
+            });
+        }
+        else if (type === sourceType) {
+            this.setState({
+                sourceVisible: true,
+            });
+        }
     };
 
-    editShowModal = (workspace) => {
-        this.editForm.resetFields();
+    editShowModal = (type, data) => {
+        if (type === workspaceType) {
+            this.editForm.resetFields();
 
-        this.setState({
-            editVisible: true,
-            workspace: workspace
-        });
+            this.setState({
+                editVisible: true,
+                workspace: data
+            });
+        }
+        else if (type === sourceType) {
+            this.editSourceForm.resetFields();
+
+            this.setState({
+                editSourceVisible: true,
+                source: data
+            });
+        }
     };
 
-    hideModal = () => {
-        this.setState({
-            visible: false,
-        });
-    };
-
-    editHideModal = () => {
-        this.setState({
-            editVisible: false,
-        });
-    };
-
-    onAddSetting() {
-        const self = this;
-        this.addForm.validateFields((errors, values) => {
-            if (errors !== null) {
-                return;
-            }
-
-            const dirName = values.dirName;
-            const dirPath = values.dirPath;
-
-            const data = { dirName, dirPath };
-            const result = electron.ipcRenderer.sendSync("addWorkspace", data);
-
-            if (result) {
-                return message.error(result, 1.5);
-            }
-
-            self.addForm.resetFields();
-
-            const workspaces = this.state.data;
-            workspaces.unshift(data);
-
-            self.setState({
+    hideModal = (type) => {
+        if (type === workspaceType) {
+            this.setState({
                 visible: false,
-                data: workspaces
             });
+        }
+        else if (type === sourceType) {
+            this.setState({
+                sourceVisible: false,
+            });
+        }
+    };
 
-            message.success("添加成功", 1.5);
-        });
-    }
+    editHideModal = (type) => {
+        if (type === workspaceType) {
+            this.setState({
+                editVisible: true,
+            });
+        }
+        else if (type === sourceType) {
+            this.setState({
+                editSourceVisible: true,
+            });
+        }
+    };
 
-    onDeleteWorkspace(dirPath) {
-        electron.ipcRenderer.send("deleteWorkspace", dirPath);
-
-        const workspaces = this.state.data;
-        this.setState({
-            data: workspaces.filter((workspace) => workspace.dirPath !== dirPath)
-        });
-    }
-
-    onSave() {
+    onAddSetting(type) {
         const self = this;
-        this.editForm.validateFields((errors, values) => {
-            if (errors !== null) {
-                return;
-            }
 
-            const dirName = values.dirName;
-            const dirPath = values.dirPath;
-
-            const data = { newData: { dirName, dirPath }, ...this.state.workspace };
-            electron.ipcRenderer.send("editWorkspace", data);
-
-            self.editForm.resetFields();
-
-            const workspaces = this.state.data;
-
-            for (const workspace of this.state.data) {
-                if (workspace.dirPath === this.state.workspace.dirPath) {
-                    workspace.dirName = dirName;
-                    workspace.dirPath = dirPath;
+        if (type === workspaceType) {
+            this.addForm.validateFields((errors, values) => {
+                if (errors !== null) {
+                    return;
                 }
-            }
-
-            self.setState({
-                editVisible: false,
-                data: workspaces
+    
+                const dirName = values.dirName;
+                const dirPath = values.dirPath;
+    
+                const data = { dirName, dirPath };
+                const result = electron.ipcRenderer.sendSync("addWorkspace", data);
+    
+                if (result.errorMessage) {
+                    return message.error(result.errorMessage, 1.5);
+                }
+    
+                self.addForm.resetFields();
+    
+                const workspaces = this.state.data;
+                workspaces.unshift(result.data);
+    
+                self.setState({
+                    visible: false,
+                    data: workspaces
+                });
+    
+                message.success("添加成功", 1.5);
             });
+        }
+        else if (type === sourceType) {
+            this.addSourceForm.validateFields((errors, values) => {
+                if (errors !== null) {
+                    return;
+                }
+    
+                const sourceName = values.sourceName;
+                const source = values.source;
+    
+                const data = { sourceName, source };
+                const result = electron.ipcRenderer.sendSync("addSource", data);
+    
+                if (result.errorMessage) {
+                    return message.error(result.errorMessage, 1.5);
+                }
+    
+                self.addSourceForm.resetFields();
+    
+                const sources = this.state.sources;
+                sources.unshift(result.data);
+    
+                self.setState({
+                    sourceVisible: false,
+                    sources
+                });
+    
+                message.success("添加成功", 1.5);
+            });
+        }
+    }
 
-            message.success("修改成功", 1.5);
+    onDelete(type, id) {
+        confirm({
+            title: `确定要删除吗?`,
+            okText: '确认',
+            cancelText: '取消',
+            onOk: () => {
+                if (type === workspaceType) {
+                    electron.ipcRenderer.send("deleteWorkspace", id);
+
+                    const workspaces = this.state.data;
+                    this.setState({
+                        data: workspaces.filter((workspace) => workspace.id !== id)
+                    });
+                }
+                else if (type === sourceType) {
+                    electron.ipcRenderer.send("deleteSource", id);
+
+                    const sources = this.state.sources;
+
+                    this.setState({
+                        sources: sources.filter((source) => source.id !== id)
+                    });
+                }
+
+                message.success('删除成功', 1.5);
+            }
         });
+    }
+
+    onSave(type) {
+        const self = this;
+        if (type === workspaceType) {
+            this.editForm.validateFields((errors, values) => {
+                if (errors !== null) {
+                    return;
+                }
+
+                const dirName = values.dirName;
+                const dirPath = values.dirPath;
+
+                const data = { newData: { dirName, dirPath }, ...this.state.workspace };
+                electron.ipcRenderer.send("editWorkspace", data);
+
+                self.editForm.resetFields();
+
+                const workspaces = this.state.data;
+
+                for (const workspace of this.state.data) {
+                    if (workspace.dirPath === this.state.workspace.dirPath) {
+                        workspace.dirName = dirName;
+                        workspace.dirPath = dirPath;
+                    }
+                }
+
+                self.setState({
+                    editVisible: false,
+                    data: workspaces
+                });
+
+                message.success("修改成功", 1.5);
+            });
+        }
+        else if (type === sourceType) {
+            this.editSourceForm.validateFields((errors, values) => {
+                if (errors !== null) {
+                    return;
+                }
+
+                const sourceName = values.sourceName;
+                const source = values.source;
+
+                const data = { newData: { sourceName, source }, ...this.state.source };
+                electron.ipcRenderer.send("editSource", data);
+
+                self.editSourceForm.resetFields();
+
+                const sources = this.state.sources;
+
+                for (const _source of sources) {
+                    if (_source.source === this.state.source.source) {
+                        _source.sourceName = sourceName;
+                        _source.source = source;
+                    }
+                }
+
+                self.setState({
+                    editSourceVisible: false,
+                    sources
+                });
+
+                message.success("修改成功", 1.5);
+            });
+        }
     }
 
     render() {
         return (
             <div style={style}>
-                {this.state.loading ? <LoadingPage tipContent={this.state.tipContent} /> : ""}
-                <Icon type="plus-circle" onClick={this.showModal} theme="twoTone" />
-                <Table
-                    rowClassName={() => "table-row"}
-                    deleteWorkspace={this.onDeleteWorkspace}
-                    style={tableStyle}
-                    bordered
-                    columns={this.columns}
-                    dataSource={this.state.data}
-                />
-                <AddSettingForm
-                    ref={(form) => { this.addForm = form; }}
-                    visible={this.state.visible}
-                    addSetting={this.onAddSetting}
-                    hideModal={this.hideModal}
-                />
-                <AddSettingForm
-                    ref={(form) => { this.editForm = form; }}
-                    visible={this.state.editVisible}
-                    addSetting={this.onSave}
-                    hideModal={this.editHideModal}
-                    workspace={this.state.workspace}
-                />
+                <Tabs defaultActiveKey="1" type="card">
+                    <TabPane tab={
+                        <span>
+                            <Icon type="folder" theme="filled" />
+                            目录设置
+                        </span>
+                    } key="1">
+                        {this.state.loading ? <LoadingPage tipContent={this.state.tipContent} /> : ""}
+                        <Button type="primary"  onClick={this.showModal.bind(this, workspaceType)}>
+                            <Icon type="plus-circle" theme="twoTone" />
+                            添加
+                        </Button>
+                        <Table
+                            rowClassName={() => "table-row"}
+                            style={tableStyle}
+                            bordered
+                            columns={this.columns}
+                            dataSource={this.state.data}
+                        />
+                        <AddSettingForm
+                            ref={(form) => { this.addForm = form; }}
+                            visible={this.state.visible}
+                            addSetting={this.onAddSetting.bind(this, workspaceType)}
+                            hideModal={this.hideModal.bind(this, workspaceType)}
+                        />
+                        <AddSettingForm
+                            ref={(form) => { this.editForm = form; }}
+                            visible={this.state.editVisible}
+                            addSetting={this.onSave.bind(this, workspaceType)}
+                            hideModal={this.editHideModal.bind(this, workspaceType)}
+                            workspace={this.state.workspace}
+                        />
+                    </TabPane>
+                    <TabPane tab={
+                        <span>
+                            <Icon type="compass" theme="filled" />
+                            依赖源设置
+                        </span>
+                    } key="2">
+                        {this.state.loading ? <LoadingPage tipContent={this.state.tipContent} /> : ""}
+                        <Button type="primary"  onClick={this.showModal.bind(this, sourceType)}>
+                            <Icon type="plus-circle" theme="twoTone" />
+                            添加
+                        </Button>
+                        <Table
+                            rowClassName={() => "table-row"}
+                            style={tableStyle}
+                            bordered
+                            columns={this.sourceColumns}
+                            dataSource={this.state.sources}
+                        />
+                        <AddSourceForm
+                            ref={(form) => { this.addSourceForm = form; }}
+                            visible={this.state.sourceVisible}
+                            addSource={this.onAddSetting.bind(this, sourceType)}
+                            hideModal={this.hideModal.bind(this, sourceType)}
+                        />
+                        <AddSourceForm
+                            ref={(form) => { this.editSourceForm = form; }}
+                            visible={this.state.editSourceVisible}
+                            addSource={this.onSave.bind(this, sourceType)}
+                            hideModal={this.editHideModal.bind(this, sourceType)}
+                            source={this.state.source}
+                        />
+                    </TabPane>
+                </Tabs>
             </div>
         );
     }

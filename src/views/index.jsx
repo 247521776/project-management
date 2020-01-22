@@ -1,11 +1,13 @@
-import { Card, Icon, Descriptions, Modal, message, Tooltip } from 'antd';
+import { Card, Icon, Descriptions, Modal, message, Tooltip, Form, Select } from 'antd';
 import React, { Component, PropTypes } from "react";
 import "antd/dist/antd.css";
 import { MenuPage } from "../component/menu";
 import { EmptyPage } from "../component/empty";
 import { StepPage } from "../component/step";
 import * as path from "path";
+
 const { confirm } = Modal;
+const { Option } = Select;
 
 const electron = window.require('electron');
 
@@ -20,6 +22,53 @@ const iconStyle = {
     "-webkit-app-region": "no-drag"
 };
 
+const formItemLayout = {
+    labelCol: { span: 4 },
+    wrapperCol: { span: 14 }
+};
+
+const EditProject = Form.create()(
+    (props) => {
+        const { visible, editProject, hideModal, form, sourceId, sources } = props;
+        const { getFieldDecorator } = form;
+        return (
+            <Modal
+                visible={visible}
+                onOk={editProject}
+                onCancel={hideModal}
+                okText="确认"
+                cancelText="取消"
+            >
+                <Form>
+                    <Form.Item label="依赖源" {...formItemLayout}>
+                        {getFieldDecorator('sourceId', {
+                            initialValue: sourceId,
+                            rules: [
+                                {
+                                    required: true,
+                                    message: '请选择依赖源',
+                                },
+                            ]
+                        })(
+                            <Select
+                                style={{ width: 120 }}
+                            >
+                                {
+                                    sources.map((source) => {
+                                        return (<Option title={source.source} value={source.id}>
+                                            {source.sourceName}
+                                        </Option>)
+                                    })
+                                }
+                            </Select>
+                        )}
+                    </Form.Item>
+                </Form>
+            </Modal>
+        );
+    }
+);
+
 class HomePage extends Component {
     constructor() {
         super(...arguments);
@@ -27,10 +76,15 @@ class HomePage extends Component {
         this.state = this.getOwnState();
         this.onCreate = this.onCreate.bind(this);
         this.onRef = this.onRef.bind(this);
+        this.onEditProject = this.onEditProject.bind(this);
 
         this.state.data = {
             projects: [],
         };
+
+        this.state.project = {};
+
+        this.state.editSourceVisible = false;
 
         electron.ipcRenderer.on('data', (event, message) => {
             this.setState({
@@ -51,6 +105,15 @@ class HomePage extends Component {
                 loading: false,
             });
         });
+
+        const sources = electron.ipcRenderer.sendSync("getSource");
+        this.state.sources = sources;
+
+        electron.ipcRenderer.on('source', (event, sources) => {
+            this.setState({
+                sources
+            });
+        });
     }
 
     getOwnState() {
@@ -59,6 +122,19 @@ class HomePage extends Component {
 
     onOpen(index) {
         electron.ipcRenderer.send("openProject", index);
+    }
+
+    hideModal = () => {
+        this.setState({
+            editSourceVisible: false,
+        });
+    };
+
+    onShowEdit(project) {
+        this.setState({
+            editSourceVisible: true,
+            project
+        });
     }
 
     onDelete(index) {
@@ -76,6 +152,33 @@ class HomePage extends Component {
 
                 message.success('删除成功', 1.5);
             }
+        });
+    }
+
+    onEditProject() {
+        const self = this;
+        this.editProjectForm.validateFields((errors, values) => {
+            if (errors !== null) {
+                return;
+            }
+
+            const sourceId = values.sourceId;
+
+            const project = self.state.project;
+
+            if (project.sourceId === sourceId) {
+                return;
+            }
+
+            project.sourceId = sourceId;
+
+            electron.ipcRenderer.send("editProject", project);
+
+            message.success('修改成功', 1.5);
+
+            self.setState({
+                editSourceVisible: false,
+            });
         });
     }
 
@@ -116,7 +219,7 @@ class HomePage extends Component {
         if (projects.length > 0) {
             return (
                 <div>
-                    <MenuPage onRef={this.onRef} onCreate={this.onCreate} />
+                    <MenuPage onRef={this.onRef} sources={this.state.sources} onCreate={this.onCreate} />
                     <StepPage />
                     {
                         projects.map((project, index) => {
@@ -132,6 +235,14 @@ class HomePage extends Component {
                                                 type="folder-open"
                                                 theme="twoTone"
                                                 twoToneColor="#4abfaf"
+                                            />
+                                        </Tooltip>,
+                                        <Tooltip title="编辑" arrowPointAtCenter>
+                                            <Icon type="edit"
+                                                theme="twoTone"
+                                                style={iconStyle}
+                                                index={index}
+                                                onClick={this.onShowEdit.bind(this, project)}
                                             />
                                         </Tooltip>,
                                         <Tooltip title="下载项目依赖" arrowPointAtCenter>
@@ -162,13 +273,21 @@ class HomePage extends Component {
                             )
                         })
                     }
+                    <EditProject
+                        ref={(form) => { this.editProjectForm = form; }}
+                        visible={this.state.editSourceVisible}
+                        editProject={this.onEditProject}
+                        hideModal={this.hideModal}
+                        sourceId={this.state.project.sourceId}
+                        sources={this.state.sources}
+                    />
                 </div>
             );
         }
         else {
             return (
                 <div>
-                    <MenuPage onRef={this.onRef} onCreate={this.onCreate} />
+                    <MenuPage onRef={this.onRef} sources={this.state.sources} onCreate={this.onCreate} />
                     <EmptyPage onRef={this.onRef} onCreate={this.onCreate} />
                 </div>
             );

@@ -1,26 +1,20 @@
 import { ipcMain, BrowserWindow } from "electron";
-import { spawn, spawnSync } from "child_process";
-import {
-    getProjectList,
-    setProjectList,
-    getSettings,
-    addWorkspace,
-    getWorkspaces,
-    deleteWorkspace,
-    getProjects,
-    editWorkspace
-} from "./utils";
+import { spawn } from "child_process";
+import * as utils from "./utils";
 import * as path from "path";
-import * as fs from "fs";
-
-let downloadShell;
+import WorkspaceEvent from "./event/workspace";
+import SourceEvent from "./event/source";
 
 export class Event {
     data: any;
     browserWindow: BrowserWindow;
+    workspace: WorkspaceEvent;
+    source: SourceEvent;
     constructor(browserWindow: BrowserWindow, data: any) {
         this.browserWindow = browserWindow;
         this.data = data;
+        this.workspace = new WorkspaceEvent(browserWindow);
+        this.source = new SourceEvent(browserWindow);
     }
 
     build() {
@@ -33,104 +27,24 @@ export class Event {
         });
 
         ipcMain.on("addProject", (event, data) => {
-            const { projectDir, type, projectPath, gitPath } = data;
+            const { projectDir, type, projectPath, gitPath, sourceId } = data;
             if (type === "add") {
-                this.addProject(projectDir);
+                this.addProject(projectDir, sourceId);
             } else if (type === "new") {
-                this.newAddProject(projectPath, gitPath);
+                this.newAddProject(projectPath, gitPath, sourceId);
             }
         });
 
         ipcMain.on("getSetting", event => {
-            event.returnValue = getSettings();
+            event.returnValue = utils.getSettings();
         });
 
-        ipcMain.on("addWorkspace", async (event, workspace) => {
-            const { dirPath } = workspace;
-            const isExistDir = fs.existsSync(dirPath);
-
-            if (!isExistDir) {
-                return (event.returnValue = "目录不存在");
-            }
-
-            const isDir = await isDirectory(dirPath);
-
-            if (!isDir) {
-                return (event.returnValue = "该目录路径不为文件夹");
-            }
-
-            const workspaces = getWorkspaces();
-
-            for (const workspace of workspaces) {
-                if (workspace.dirPath === dirPath) {
-                    return (event.returnValue = "目录已添加");
-                }
-            }
-
-            addWorkspace(workspace);
-
-            this.browserWindow.webContents.send("workspace", getWorkspaces());
-            event.returnValue = "";
+        ipcMain.on("editProject", (event, project) => {
+            utils.editProject(project);
         });
 
-        ipcMain.on("getWorkspace", event => {
-            event.returnValue = getWorkspaces();
-        });
-
-        ipcMain.on("deleteWorkspace", (event, dirPath) => {
-            deleteWorkspace(dirPath);
-            this.browserWindow.webContents.send("workspace", getWorkspaces());
-        });
-
-        ipcMain.on("editWorkspace", (event, data) => {
-            editWorkspace(data);
-        });
-
-        ipcMain.on("downloadDepend", (event, dirPath) => {
-            this.browserWindow.webContents.send("downloadDepend-setting");
-
-            this.browserWindow.webContents.send("downloadDepend");
-
-            downloadShell = spawn(`cd ${dirPath} && npm install`, {
-                shell: true
-            });
-
-            downloadShell.on("close", code => {
-                if(code === null) {
-                    downloadShell = null;
-                    return;
-                }
-
-                if (code === 0) {
-                    this.browserWindow.webContents.send("downloadDepend-done");
-                } else {
-                    this.browserWindow.webContents.send("downloadDepend-error");
-                }
-
-                downloadShell = null;
-            });
-        });
-
-        ipcMain.on("downloadDepend-cancel", event => {
-            if (downloadShell) {
-                downloadShell.kill();
-            }
-        });
-
-        ipcMain.on("getWorkspaceDirectories", (event, dirPath) => {
-            const projects = getProjects();
-            const directories = fs.readdirSync(dirPath);
-            const projectPaths = projects.map(project => project.dir);
-
-            const filterAfterDirectories = directories.filter(dirName => {
-                return (
-                    dirName.indexOf(".") === -1 &&
-                    !projectPaths.includes(path.resolve(dirPath, dirName))
-                );
-            });
-
-            event.returnValue = filterAfterDirectories;
-        });
+        this.workspace.build();
+        this.source.build();
     }
 
     openProject(index) {
@@ -143,31 +57,33 @@ export class Event {
     deleteProject(index) {
         const project = this.data.projects.splice(index, 1)[0];
 
-        setProjectList(this.data.projects);
+        utils.setProjectList(this.data.projects);
 
         spawn(`rm -rf ${project.dir}`, {
             shell: true
         });
     }
 
-    addProject(projectDir) {
+    addProject(projectDir, sourceId) {
         this.data.projects.unshift({
-            dir: projectDir
+            dir: projectDir,
+            sourceId
         });
 
-        setProjectList(this.data.projects);
+        utils.setProjectList(this.data.projects);
 
-        this.browserWindow.webContents.send("loaded", getProjectList());
+        this.browserWindow.webContents.send("loaded", utils.getProjectList());
     }
 
-    newAddProject(projectPath, gitPath) {
+    newAddProject(projectPath, gitPath, sourceId) {
         const splitResult = gitPath.split("/");
         const projectName = splitResult[splitResult.length - 1].split(".")[0];
         this.data.projects.unshift({
-            dir: path.resolve(projectPath, projectName)
+            dir: path.resolve(projectPath, projectName),
+            sourceId
         });
 
-        setProjectList(this.data.projects);
+        utils.setProjectList(this.data.projects);
 
         const result = spawn(
             `mkdir -p ${projectPath} && cd ${projectPath} && git clone ${gitPath}`,
@@ -177,19 +93,7 @@ export class Event {
         );
 
         result.on("close", () => {
-            this.browserWindow.webContents.send("loaded", getProjectList());
+            this.browserWindow.webContents.send("loaded", utils.getProjectList());
         });
     }
-}
-
-async function isDirectory(path) {
-    return new Promise((resolve, reject) => {
-        fs.stat(path, (err, stats) => {
-            if (err) {
-                return reject(err);
-            }
-
-            return resolve(stats.isDirectory());
-        });
-    });
 }

@@ -3,7 +3,7 @@ import { MenuBuilder } from "./menu";
 import { Shortcut } from "./shortcut";
 import { Event } from "./event";
 import * as path from "path";
-import { getProjectList, setProjectList } from "./utils";
+import { getProjectList, setProjectList, clear } from './utils';
 
 const loadURL = `file://${path.resolve(__dirname, "../")}/build/index.html#/homePage`;
 

@@ -25,12 +25,14 @@
   "homepage": "https://github.com/247521776/project-management#readme",
   "dependencies": {
     "@types/shelljs": "^0.8.6",
+    "@types/uuid": "^3.4.6",
     "antd": "^3.26.4",
     "electron-store": "^5.1.0",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "react-router-dom": "^5.1.2",
-    "redux": "^3.7.2"
+    "redux": "^3.7.2",
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "^12.12.21",
